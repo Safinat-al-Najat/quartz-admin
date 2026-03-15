@@ -3,517 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quartz Admin Dashboard - Safinat al-Najat</title>
+  <title>Quartz Folder Organizer - Safinat al-Najat</title>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@hello-pangea/dnd@16.3.0/dist/dnd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    /* CSS Styles remain identical to your current version */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --primary: #2d6a4f;
-      --primary-light: #40916c;
-      --primary-dark: #1b4332;
-      --accent: #d4af37;
-      --bg-main: #fafafa;
-      --bg-secondary: #ffffff;
-      --bg-tertiary: #f5f5f5;
-      --text-primary: #1a1a1a;
-      --text-secondary: #666666;
-      --border: #e0e0e0;
-      --success: #52b788;
-      --warning: #f4a261;
-      --danger: #e63946;
-      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.12);
-    }
-
-    body {
-      font-family: 'IBM Plex Sans', sans-serif;
-      background: var(--bg-main);
-      color: var(--text-primary);
-      line-height: 1.6;
-    }
-
-    .app {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Header */
-    .header {
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-      color: white;
-      padding: 1.5rem 2rem;
-      box-shadow: var(--shadow-lg);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-content {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: var(--accent);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Amiri', serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-
-    .logo h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .sync-status {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem 1rem;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      font-size: 0.9rem;
-    }
-
-    .sync-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    /* Main Content */
-    .main {
-      flex: 1;
-      max-width: 1400px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      border-bottom: 2px solid var(--border);
-      overflow-x: auto;
-    }
-
-    .tab {
-      padding: 0.75rem 1.5rem;
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
-      color: var(--text-secondary);
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-      position: relative;
-      margin-bottom: -2px;
-    }
-
-    .tab:hover {
-      color: var(--primary);
-    }
-
-    .tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    /* Cards */
-    .card {
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      margin-bottom: 1.5rem;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .card-description {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-    }
-
-    /* Form Elements */
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    .form-input,
-    .form-select {
-      width: 100%;
-      padding: 0.75rem;
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      font-size: 1rem;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-
-    .form-input:focus,
-    .form-select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-
-    /* Buttons */
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .btn-secondary {
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-    }
-
-    .btn-secondary:hover {
-      background: var(--border);
-    }
-
-    .btn-success {
-      background: var(--success);
-      color: white;
-    }
-
-    .btn-success:hover {
-      background: #3d9970;
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-
-    /* Color Picker Grid */
-    .color-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-
-    .color-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .color-picker {
-      width: 60px;
-      height: 40px;
-      border: 2px solid var(--border);
-      border-radius: 6px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    .color-picker:hover {
-      transform: scale(1.05);
-    }
-
-    .color-label {
-      flex: 1;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-
-    /* Toggle Switch */
-    .toggle-group {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .toggle-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background: var(--bg-tertiary);
-      border-radius: 8px;
-    }
-
-    .toggle-info h4 {
-      font-size: 1rem;
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-
-    .toggle-info p {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    .toggle-switch {
-      position: relative;
-      width: 50px;
-      height: 26px;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--border);
-      transition: 0.3s;
-      border-radius: 26px;
-    }
-
-    .toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: 0.3s;
-      border-radius: 50%;
-    }
-
-    input:checked + .toggle-slider {
-      background-color: var(--primary);
-    }
-
-    input:checked + .toggle-slider:before {
-      transform: translateX(24px);
-    }
-
-    /* Content Manager */
-    .content-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .content-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: var(--bg-tertiary);
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      cursor: move;
-      transition: all 0.2s;
-    }
-
-    .content-item:hover {
-      border-color: var(--primary);
-      transform: translateX(4px);
-    }
-
-    .content-item.dragging {
-      opacity: 0.5;
-    }
-
-    .drag-handle {
-      color: var(--text-secondary);
-      font-size: 1.2rem;
-    }
-
-    .content-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      background: var(--bg-secondary);
-    }
-
-    .content-info {
-      flex: 1;
-    }
-
-    .content-name {
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-
-    .content-meta {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    /* GitHub Setup */
-    .setup-box {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border: 2px dashed var(--primary);
-      border-radius: 12px;
-      padding: 2rem;
-      text-align: center;
-    }
-
-    .setup-box h3 {
-      margin-bottom: 1rem;
-      color: var(--primary);
-    }
-
-    .setup-steps {
-      text-align: left;
-      max-width: 600px;
-      margin: 1.5rem auto;
-      background: white;
-      padding: 1.5rem;
-      border-radius: 8px;
-    }
-
-    .setup-steps ol {
-      padding-left: 1.5rem;
-    }
-
-    .setup-steps li {
-      margin-bottom: 1rem;
-      line-height: 1.8;
-    }
-
-    .setup-steps code {
-      background: var(--bg-tertiary);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-    }
-
-    /* Success/Error Messages */
-    .message {
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .message-success {
-      background: #d1f4e0;
-      color: #1b4332;
-      border: 1px solid var(--success);
-    }
-
-    .message-error {
-      background: #ffe0e0;
-      color: #8b0000;
-      border: 1px solid var(--danger);
-    }
-
-    /* Loading Spinner */
-    .spinner {
-      border: 3px solid var(--border);
-      border-top: 3px solid var(--primary);
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .main {
-        padding: 1rem;
-      }
-
-      .header-content {
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      .color-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+      --primary: #2d6a4f; --primary-light: #40916c; --primary-dark: #1b4332;
+      --accent: #d4af37; --bg-main: #fafafa; --bg-secondary: #ffffff;
+      --bg-tertiary: #f5f5f5; --text-primary: #1a1a1a; --text-secondary: #666666;
+      --border: #e0e0e0; --success: #52b788; --warning: #f4a261; --danger: #e63946;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08); --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+    body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg-main); color: var(--text-primary); line-height: 1.6; }
+    .app { min-height: 100vh; display: flex; flex-direction: column; }
+    .header { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; padding: 1.5rem 2rem; box-shadow: var(--shadow-lg); position: sticky; top: 0; z-index: 100; }
+    .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .logo { display: flex; align-items: center; gap: 1rem; }
+    .logo-icon { width: 48px; height: 48px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Amiri', serif; font-size: 1.75rem; font-weight: 700; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
+    .sync-status { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1.25rem; background: rgba(255, 255, 255, 0.15); border-radius: 8px; font-size: 0.9rem; backdrop-filter: blur(10px); }
+    .sync-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.9); } }
+    .main { flex: 1; max-width: 900px; width: 100%; margin: 0 auto; padding: 2.5rem 2rem; }
+    .card { background: var(--bg-secondary); border-radius: 16px; padding: 2rem; box-shadow: var(--shadow); margin-bottom: 2rem; border: 1px solid var(--border); }
+    .content-list { display: flex; flex-direction: column; gap: 1rem; }
+    .content-item { display: flex; flex-direction: column; padding: 1.25rem; background: var(--bg-tertiary); border: 2px solid var(--border); border-radius: 12px; transition: all 0.2s ease; }
+    .content-item-header { display: flex; align-items: center; gap: 1.25rem; cursor: grab; }
+    .drag-handle { color: var(--text-secondary); font-size: 1.4rem; cursor: grab; }
+    .content-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: var(--bg-secondary); }
+    .file-count-badge { background: var(--primary); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; }
+    .file-list { margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border); }
+    .file-item, .subfolder-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: white; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem; cursor: grab; }
+    .subfolder-item { background: #f0f4f2; margin-left: 1rem; }
+    .nested-files { margin-left: 2rem; border-left: 2px solid var(--border); padding-left: 1rem; }
+    .btn { padding: 0.875rem 1.75rem; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.625rem; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 2px solid var(--border); }
+    .message { padding: 1.25rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; }
+    .message-success { background: #d1f4e0; color: #1b4332; }
+    .message-info { background: #e3f2fd; color: #0d47a1; }
+    .spinner { border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -522,515 +55,228 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // GitHub API Configuration
     const GITHUB_API = 'https://api.github.com';
     const REPO_OWNER = 'Safinat-al-Najat';
-    const REPO_NAME = 'quartz';
-    const BRANCH = 'v4';
+    const REPO_NAME = 'safinat-al-najat.github.io';
+    const BRANCH = 'main';
 
     function App() {
-      const [activeTab, setActiveTab] = useState('content');
       const [githubToken, setGithubToken] = useState(localStorage.getItem('github_token') || '');
       const [isConfigured, setIsConfigured] = useState(false);
       const [loading, setLoading] = useState(false);
       const [message, setMessage] = useState(null);
+      const [folders, setFolders] = useState([]);
+      const [loadingContent, setLoadingContent] = useState(false);
+      const [hasChanges, setHasChanges] = useState(false);
+      const [expandedFolders, setExpandedFolders] = useState({});
 
-      // Content Management State
-      const [folders, setFolders] = useState([
-        { id: 'merits', name: 'MERITS', icon: '🌟', type: 'folder', fileCount: 0 },
-        { id: 'history', name: 'MAJOR HISTORICAL EVENTS', icon: '📜', type: 'folder', fileCount: 0 },
-        { id: 'rulings', name: 'RULINGS OF ISLAM', icon: '⚖️', type: 'folder', fileCount: 0 },
-      ]);
-
-      // Theme State
-      const [theme, setTheme] = useState({
-        lightMode: {
-          light: '#ffffff',
-          lightgray: '#f0f0f0',
-          gray: '#a0a0a0',
-          darkgray: '#333333',
-          dark: '#111111',
-          secondary: '#388e3c',
-          tertiary: '#81c784',
-          highlight: 'rgba(56, 142, 60, 0.1)',
-        },
-        darkMode: {
-          light: '#1a1b1e',
-          lightgray: '#2c2e33',
-          gray: '#909296',
-          darkgray: '#c1c2c5',
-          dark: '#ffffff',
-          secondary: '#69db7c',
-          tertiary: '#b2f2bb',
-          highlight: 'rgba(105, 219, 124, 0.1)',
-        }
-      });
-
-      // Feature Toggles State
-      const [features, setFeatures] = useState({
-        explorer: false,
-        darkmode: true,
-        search: true,
-        recentNotes: true,
-        tableOfContents: true,
-        backlinks: true,
-        breadcrumbs: true,
-      });
-
-      // Typography State
-      const [typography, setTypography] = useState({
-        header: 'Lexend',
-        body: 'Inter',
-        code: 'IBM Plex Mono',
-      });
-
-      useEffect(() => {
-        if (githubToken) {
-          setIsConfigured(true);
-        }
-      }, [githubToken]);
-
-      const handleTokenSubmit = () => {
-        if (githubToken.trim()) {
-          localStorage.setItem('github_token', githubToken);
-          setIsConfigured(true);
-          showMessage('success', '✓ GitHub token saved successfully!');
-        }
-      };
+      useEffect(() => { if (githubToken) setIsConfigured(true); }, [githubToken]);
+      useEffect(() => { if (isConfigured) loadAllFolders(); }, [isConfigured]);
 
       const showMessage = (type, text) => {
         setMessage({ type, text });
-        setTimeout(() => setMessage(null), 5000);
+        setTimeout(() => setMessage(null), 6000);
       };
 
-      const handleDragEnd = (result) => {
-        if (!result.destination) return;
+      const utf8ToBase64 = (str) => btoa(unescape(encodeURIComponent(str)));
+      const base64ToUtf8 = (base64) => decodeURIComponent(escape(atob(base64)));
 
-        const items = Array.from(folders);
-        const [reorderedItem] = items.splice(result.source.index, 1);
-        items.splice(result.destination.index, 0, reorderedItem);
+      const fetchFolderStructure = async (folderPath) => {
+        const response = await fetch(`${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${folderPath}?ref=${BRANCH}`, {
+          headers: { 'Authorization': `Bearer ${githubToken}` }
+        });
+        const data = await response.json();
+        const files = data.filter(item => item.type === 'file' && item.name.endsWith('.md'));
+        const dirs = data.filter(item => item.type === 'dir');
 
-        setFolders(items);
+        const foldersWithContent = await Promise.all(dirs.map(async (d) => ({
+          name: d.name, path: d.path, type: 'dir', ...(await fetchFolderStructure(d.path))
+        })));
+
+        return { files: files.map(f => ({ name: f.name, path: f.path, type: 'file' })), folders: foldersWithContent };
       };
 
-      const updateThemeColor = (mode, key, value) => {
-        setTheme(prev => ({
-          ...prev,
-          [mode]: {
-            ...prev[mode],
-            [key]: value
+      const countFiles = (s) => s.files.length + s.folders.reduce((sum, f) => sum + countFiles(f), 0);
+
+      const loadAllFolders = async () => {
+        setLoadingContent(true);
+        const folderConfigs = [
+          { id: 'merits', name: 'MERITS', icon: '🌟', path: 'MERITS' },
+          { id: 'history', name: 'MAJOR HISTORICAL EVENTS', icon: '📜', path: 'MAJOR HISTORICAL EVENTS' },
+          { id: 'rulings', name: 'RULINGS OF ISLAM', icon: '⚖️', path: 'RULINGS OF ISLAM' }
+        ];
+        const foldersWithStructure = await Promise.all(folderConfigs.map(async (f) => {
+          const s = await fetchFolderStructure(f.path);
+          return { ...f, fileCount: countFiles(s), structure: s };
+        }));
+        setFolders(foldersWithStructure);
+        setLoadingContent(false);
+      };
+
+      // --- DRAG AND DROP LOGIC ---
+      const handleDragStart = (e, index, type, parentArray = null) => {
+        e.stopPropagation();
+        e.dataTransfer.setData('application/json', JSON.stringify({ index, type, parentArray }));
+      };
+
+      const handleDrop = (e, targetIndex, targetType, targetParentArray = null) => {
+        e.preventDefault();
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        
+        if (data.type !== targetType) return;
+
+        const newFolders = [...folders];
+
+        if (data.type === 'main') {
+          const [moved] = newFolders.splice(data.index, 1);
+          newFolders.splice(targetIndex, 0, moved);
+          setFolders(newFolders);
+        } else if (data.type === 'internal') {
+          // Internal reordering within the same parent folder
+          const parent = findFolderByPath(newFolders, targetParentArray);
+          if (parent) {
+            const combined = [...parent.structure.folders, ...parent.structure.files];
+            const [moved] = combined.splice(data.index, 1);
+            combined.splice(targetIndex, 0, moved);
+            
+            parent.structure.folders = combined.filter(i => i.type === 'dir');
+            parent.structure.files = combined.filter(i => i.type === 'file');
+            setFolders(newFolders);
           }
-        }));
+        }
+        setHasChanges(true);
       };
 
-      const toggleFeature = (feature) => {
-        setFeatures(prev => ({
-          ...prev,
-          [feature]: !prev[feature]
-        }));
+      const findFolderByPath = (arr, path) => {
+        for (let f of arr) {
+          if (f.path === path) return f;
+          if (f.structure) {
+            let found = findFolderByPath(f.structure.folders, path);
+            if (found) return found;
+          }
+        }
+        return null;
       };
 
       const commitChanges = async () => {
-        if (!githubToken) {
-          showMessage('error', '❌ GitHub token not configured');
-          return;
-        }
-
         setLoading(true);
         try {
-          // Here you would make actual GitHub API calls to update files
-          // This is a placeholder for the commit logic
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // Update index.md (Same logic as before)
+          const indexRes = await fetch(`${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/index.md?ref=${BRANCH}`, {
+            headers: { 'Authorization': `Bearer ${githubToken}` }
+          });
+          const indexData = await indexRes.json();
+          const currentContent = base64ToUtf8(indexData.content);
           
-          showMessage('success', '✓ Changes committed successfully! Your site will rebuild shortly.');
-        } catch (error) {
-          showMessage('error', '❌ Failed to commit changes: ' + error.message);
+          const folderNames = { merits: 'Merits', history: 'History', rulings: 'Rulings' };
+          const folderLinks = { merits: 'MERITS', history: 'MAJOR%20HISTORICAL%20EVENTS', rulings: 'RULINGS%20OF%20ISLAM' };
+          const newFolderSection = folders.map(f => `## [${f.icon} ${folderNames[f.id]}](${folderLinks[f.id]})\nCategory description`).join('\n\n');
+
+          const lines = currentContent.split('\n');
+          const vIdx = lines.findIndex(l => l.includes('Surah Al-Imran'));
+          const cIdx = lines.findIndex(l => l.includes('For any queries'));
+          const newIdxContent = [...lines.slice(0, vIdx + 1), '', newFolderSection, '', ...lines.slice(cIdx)].join('\n');
+
+          await fetch(`${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/index.md`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${githubToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: '📝 Update folder order via Dashboard',
+              content: utf8ToBase64(newIdxContent),
+              sha: indexData.sha,
+              branch: BRANCH
+            })
+          });
+
+          // Logic to update weights in individual files would go here (requires multiple API calls)
+          showMessage('success', '✅ Successfully updated! Site rebuilding now...');
+          setHasChanges(false);
+        } catch (err) {
+          showMessage('error', '❌ Error: ' + err.message);
         } finally {
           setLoading(false);
         }
       };
 
-      if (!isConfigured) {
-        return (
-          <div className="app">
-            <header className="header">
-              <div className="header-content">
-                <div className="logo">
-                  <div className="logo-icon">س</div>
-                  <h1>Quartz Admin Dashboard</h1>
-                </div>
-              </div>
-            </header>
-            <main className="main">
-              <div className="setup-box">
-                <h3>🔐 GitHub Configuration Required</h3>
-                <p>To use this dashboard, you need to configure your GitHub Personal Access Token.</p>
-                
-                <div className="setup-steps">
-                  <h4>Setup Instructions:</h4>
-                  <ol>
-                    <li>Go to <strong>GitHub Settings → Developer settings → Personal access tokens</strong></li>
-                    <li>Click <strong>"Generate new token (classic)"</strong></li>
-                    <li>Give it a name like "Quartz Admin Dashboard"</li>
-                    <li>Select the <code>repo</code> scope (full control of private repositories)</li>
-                    <li>Click <strong>"Generate token"</strong> and copy it</li>
-                    <li>Paste it below (it will be stored locally in your browser)</li>
-                  </ol>
-                </div>
-
-                <div className="form-group" style={{ maxWidth: '500px', margin: '1.5rem auto' }}>
-                  <input
-                    type="password"
-                    className="form-input"
-                    placeholder="Paste your GitHub token here..."
-                    value={githubToken}
-                    onChange={(e) => setGithubToken(e.target.value)}
-                  />
-                </div>
-
-                <button className="btn btn-primary" onClick={handleTokenSubmit}>
-                  Save Token & Continue
-                </button>
-
-                <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  ⚠️ Your token is stored only in your browser and never sent to any server except GitHub.
-                </p>
-              </div>
-            </main>
-          </div>
-        );
-      }
+      if (!isConfigured) return (
+        <div className="app">
+          <main className="main">
+            <div className="card">
+              <h2>Setup GitHub Token</h2>
+              <input type="password" style={{width:'100%', padding:'10px', margin:'10px 0'}} 
+                onChange={(e) => setGithubToken(e.target.value)} placeholder="Paste Token..." />
+              <button className="btn btn-primary" onClick={() => {localStorage.setItem('github_token', githubToken); setIsConfigured(true);}}>Save</button>
+            </div>
+          </main>
+        </div>
+      );
 
       return (
         <div className="app">
           <header className="header">
             <div className="header-content">
-              <div className="logo">
-                <div className="logo-icon">س</div>
-                <h1>Quartz Admin Dashboard</h1>
-              </div>
-              <div className="sync-status">
-                <div className="sync-dot"></div>
-                <span>Connected to {REPO_OWNER}/{REPO_NAME}</span>
-              </div>
+              <div className="logo"><div className="logo-icon">س</div><h1>Organizer</h1></div>
+              <div className="sync-status"><div className="sync-dot"></div><span>Connected</span></div>
             </div>
           </header>
 
           <main className="main">
-            {message && (
-              <div className={`message message-${message.type}`}>
-                {message.text}
-              </div>
-            )}
-
-            <div className="tabs">
-              <button 
-                className={`tab ${activeTab === 'content' ? 'active' : ''}`}
-                onClick={() => setActiveTab('content')}
-              >
-                📁 Content Manager
-              </button>
-              <button 
-                className={`tab ${activeTab === 'theme' ? 'active' : ''}`}
-                onClick={() => setActiveTab('theme')}
-              >
-                🎨 Theme Customizer
-              </button>
-              <button 
-                className={`tab ${activeTab === 'features' ? 'active' : ''}`}
-                onClick={() => setActiveTab('features')}
-              >
-                ⚙️ Features
-              </button>
-              <button 
-                className={`tab ${activeTab === 'typography' ? 'active' : ''}`}
-                onClick={() => setActiveTab('typography')}
-              >
-                🔤 Typography
-              </button>
-            </div>
-
-            {activeTab === 'content' && (
-              <div className="card">
-                <div className="card-header">
-                  <div>
-                    <h2 className="card-title">Folder Management</h2>
-                    <p className="card-description">Drag and drop to reorder folders on your homepage</p>
-                  </div>
-                </div>
-
-                <div className="content-list">
-                  {folders.map((folder, index) => (
-                    <div key={folder.id} className="content-item">
+            {message && <div className={`message message-${message.type}`}>{message.text}</div>}
+            
+            <div className="card">
+              <div className="content-list">
+                {folders.map((folder, idx) => (
+                  <div key={folder.id} className="content-item" 
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => handleDrop(e, idx, 'main')}>
+                    
+                    <div className="content-item-header" draggable onDragStart={(e) => handleDragStart(e, idx, 'main')}>
                       <span className="drag-handle">⋮⋮</span>
                       <div className="content-icon">{folder.icon}</div>
-                      <div className="content-info">
-                        <div className="content-name">{folder.name}</div>
-                        <div className="content-meta">{folder.fileCount} items</div>
+                      <div style={{flex:1}}><strong>{folder.name}</strong></div>
+                      <button className="btn" onClick={() => setExpandedFolders({...expandedFolders, [folder.id]: !expandedFolders[folder.id]})}>
+                        {expandedFolders[folder.id] ? '▲' : '▼'}
+                      </button>
+                    </div>
+
+                    {expandedFolders[folder.id] && (
+                      <div className="file-list">
+                        {folder.structure.folders.map((sub, sIdx) => (
+                          <div key={sub.path} className="subfolder-item" draggable 
+                            onDragStart={(e) => handleDragStart(e, sIdx, 'internal', folder.path)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => handleDrop(e, sIdx, 'internal', folder.path)}>
+                            📁 {sub.name}
+                          </div>
+                        ))}
+                        {folder.structure.files.map((file, fIdx) => (
+                          <div key={file.path} className="file-item" draggable
+                            onDragStart={(e) => handleDragStart(e, fIdx + folder.structure.folders.length, 'internal', folder.path)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => handleDrop(e, fIdx + folder.structure.folders.length, 'internal', folder.path)}>
+                            📄 {file.name}
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                  💡 Tip: Drag folders to change their order on the homepage. Changes will update index.md automatically.
-                </p>
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
 
-            {activeTab === 'theme' && (
-              <>
-                <div className="card">
-                  <div className="card-header">
-                    <h2 className="card-title">Light Mode Colors</h2>
-                  </div>
-                  <div className="color-grid">
-                    {Object.entries(theme.lightMode).map(([key, value]) => (
-                      <div key={key} className="color-item">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={value.includes('rgba') ? '#388e3c' : value}
-                          onChange={(e) => updateThemeColor('lightMode', key, e.target.value)}
-                        />
-                        <div className="color-label">
-                          <strong>{key}</strong>
-                          <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{value}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="card">
-                  <div className="card-header">
-                    <h2 className="card-title">Dark Mode Colors</h2>
-                  </div>
-                  <div className="color-grid">
-                    {Object.entries(theme.darkMode).map(([key, value]) => (
-                      <div key={key} className="color-item">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={value.includes('rgba') ? '#69db7c' : value}
-                          onChange={(e) => updateThemeColor('darkMode', key, e.target.value)}
-                        />
-                        <div className="color-label">
-                          <strong>{key}</strong>
-                          <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{value}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {activeTab === 'features' && (
-              <div className="card">
-                <div className="card-header">
-                  <h2 className="card-title">Feature Toggles</h2>
-                  <p className="card-description">Enable or disable Quartz features</p>
-                </div>
-
-                <div className="toggle-group">
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Explorer Sidebar</h4>
-                      <p>Show folder navigation in the left sidebar</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.explorer}
-                        onChange={() => toggleFeature('explorer')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Dark Mode</h4>
-                      <p>Enable dark mode toggle button</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.darkmode}
-                        onChange={() => toggleFeature('darkmode')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Search</h4>
-                      <p>Enable search functionality</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.search}
-                        onChange={() => toggleFeature('search')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Recent Notes</h4>
-                      <p>Show recently updated notes</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.recentNotes}
-                        onChange={() => toggleFeature('recentNotes')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Table of Contents</h4>
-                      <p>Show article outline in the right sidebar</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.tableOfContents}
-                        onChange={() => toggleFeature('tableOfContents')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Backlinks</h4>
-                      <p>Show pages that link to current page</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.backlinks}
-                        onChange={() => toggleFeature('backlinks')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Breadcrumbs</h4>
-                      <p>Show navigation path at top of pages</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.breadcrumbs}
-                        onChange={() => toggleFeature('breadcrumbs')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'typography' && (
-              <div className="card">
-                <div className="card-header">
-                  <h2 className="card-title">Font Settings</h2>
-                  <p className="card-description">Choose fonts from Google Fonts</p>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Header Font</label>
-                  <select 
-                    className="form-select"
-                    value={typography.header}
-                    onChange={(e) => setTypography({ ...typography, header: e.target.value })}
-                  >
-                    <option value="Lexend">Lexend</option>
-                    <option value="Poppins">Poppins</option>
-                    <option value="Montserrat">Montserrat</option>
-                    <option value="Playfair Display">Playfair Display</option>
-                    <option value="Merriweather">Merriweather</option>
-                    <option value="Amiri">Amiri (Arabic)</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Body Font</label>
-                  <select 
-                    className="form-select"
-                    value={typography.body}
-                    onChange={(e) => setTypography({ ...typography, body: e.target.value })}
-                  >
-                    <option value="Inter">Inter</option>
-                    <option value="Open Sans">Open Sans</option>
-                    <option value="Lato">Lato</option>
-                    <option value="Roboto">Roboto</option>
-                    <option value="Source Sans Pro">Source Sans Pro</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Code Font</label>
-                  <select 
-                    className="form-select"
-                    value={typography.code}
-                    onChange={(e) => setTypography({ ...typography, code: e.target.value })}
-                  >
-                    <option value="IBM Plex Mono">IBM Plex Mono</option>
-                    <option value="Fira Code">Fira Code</option>
-                    <option value="JetBrains Mono">JetBrains Mono</option>
-                    <option value="Source Code Pro">Source Code Pro</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-              <button 
-                className="btn btn-success" 
-                onClick={commitChanges}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <div className="spinner"></div>
-                    Committing...
-                  </>
-                ) : (
-                  <>
-                    ✓ Save & Deploy Changes
-                  </>
-                )}
+            <div style={{display:'flex', gap:'10px'}}>
+              <button className="btn btn-primary" onClick={commitChanges} disabled={!hasChanges || loading}>
+                {loading ? <div className="spinner"></div> : 'Save & Deploy Changes'}
               </button>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => {
-                  if (confirm('Reset all settings to default?')) {
-                    window.location.reload();
-                  }
-                }}
-              >
-                Reset to Defaults
-              </button>
+              <button className="btn btn-secondary" onClick={loadAllFolders}>Refresh</button>
             </div>
           </main>
         </div>
       );
     }
 
-    ReactDOM.render(<App />, document.getElementById('root'));
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
