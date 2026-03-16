@@ -193,6 +193,39 @@ let _tok='';
 const setTok=(t)=>{_tok=t;};
 const enc=(s)=>btoa(unescape(encodeURIComponent(s)));
 const dec=(b)=>decodeURIComponent(escape(atob(b.replace(/\n/g,''))));
+
+/* SECURE TOKEN DECRYPTION */
+// The token is encrypted with AES-GCM using the password as the key.
+// To change the token, generate a new encrypted payload and replace these values:
+const ENCRYPTED_TOKEN = "Qn+7B3hU8d3k5s6o7r9t0y+wZ... (replace this)"; 
+const SALT = "salty_safinat";
+const IV = new Uint8Array([11, 22, 33, 44, 55, 66, 77, 88, 99, 10, 11, 12]);
+
+async function decryptToken(password) {
+  try {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]
+    );
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: enc.encode(SALT), iterations: 100000, hash: "SHA-256" },
+      keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+    );
+    
+    // Convert base64 string to Uint8Array
+    const binary = atob(ENCRYPTED_TOKEN);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    
+    const decryptedOutput = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: IV }, key, bytes
+    );
+    return new TextDecoder().decode(decryptedOutput);
+  } catch (e) {
+    throw new Error("Incorrect password");
+  }
+}
+
 const epath=(r,p)=>`/repos/${r.owner}/${r.name}/contents/${encodeURIComponent(p).replace(/%2F/g,'/')}`;
 async function gh(ep,opts={}){
   const r=await fetch(GAPI+ep,{...opts,headers:{'Authorization':`Bearer ${_tok}`,'Content-Type':'application/json',...(opts.headers||{})}});
@@ -286,47 +319,113 @@ function Header({page,dark,setDark,onLogout}){
 
 /* ============ AUTH PAGE ============ */
 function AuthPage({onAuth}){
-  const [tok,setTokVal]=useState('');
+  const [pwd,setPwd]=useState('');
   const [loading,setLoading]=useState(false);
   const [err,setErr]=useState('');
+  
+  // Setup mode states
+  const needsSetup = ENCRYPTED_TOKEN.includes('replace this');
+  const [setupTok, setSetupTok] = useState('');
+  const [setupPwd, setSetupPwd] = useState('');
+  const [generatedCode, setGeneratedCode] = useState('');
+
   const submit=async()=>{
-    if(!tok.trim())return;
+    if(!pwd.trim())return;
     setLoading(true);setErr('');
     try{
-      setTok(tok);
-      const r=await fetch(`${GAPI}/repos/${CR.owner}/${CR.name}`,{headers:{'Authorization':`Bearer ${tok}`}});
-      if(!r.ok)throw new Error('Invalid token or no access to the content repository');
-      localStorage.setItem('github_token',tok);
-      onAuth(tok);
-    }catch(e){setTok('');setErr(e.message);}
+      const token = await decryptToken(pwd);
+      setTok(token);
+      // Verify token actually works
+      const r=await fetch(`${GAPI}/repos/${CR.owner}/${CR.name}`,{headers:{'Authorization':`Bearer ${token}`}});
+      if(!r.ok)throw new Error('Could not access repository. Admin password might be wrong or token expired.');
+      localStorage.setItem('admin_pwd',pwd); // Store password
+      onAuth(token);
+    }catch(e){setPwd('');setErr(e.message);}
     finally{setLoading(false);}
   };
+  
+  const generateEncryptedToken=async()=>{
+    if(!setupTok||!setupPwd)return;
+    setLoading(true);
+    try{
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(setupPwd), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]);
+      const key = await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: enc.encode(SALT), iterations: 100000, hash: "SHA-256" },
+        keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
+      );
+      const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: IV }, key, enc.encode(setupTok));
+      
+      const bytes = new Uint8Array(encrypted);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
+      setGeneratedCode(`const ENCRYPTED_TOKEN = "${base64}";`);
+    }catch(e){setErr('Encryption failed: '+e.message);}
+    finally{setLoading(false);}
+  };
+
+  // Auto-login if password was saved
+  useEffect(() => {
+    if (!needsSetup) {
+      const saved = localStorage.getItem('admin_pwd');
+      if (saved) { setPwd(saved); setTimeout(submit, 100); }
+    }
+  }, [needsSetup]);
+
+  if (needsSetup) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card" style={{maxWidth:'550px'}}>
+          <div className="auth-top">
+            <h2>Initial Security Setup</h2>
+            <p>Convert your GitHub token into a secure, password-protected format.</p>
+          </div>
+          {err&&<div className="alert alert-error">{err}</div>}
+          
+          {!generatedCode ? (
+            <>
+              <div className="form-group">
+                <label>Your GitHub Token (ghp_...)</label>
+                <input className="input" type="password" value={setupTok} onChange={e=>setSetupTok(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Create an Admin Password</label>
+                <input className="input" type="password" value={setupPwd} onChange={e=>setSetupPwd(e.target.value)} />
+                <small>You will use this password to log in instead of the token.</small>
+              </div>
+              <button className="btn btn-primary btn-full" onClick={generateEncryptedToken} disabled={loading||!setupTok||!setupPwd}>
+                {loading?<span className="spin"></span>:'🔒'} Encrypt Token
+              </button>
+            </>
+          ) : (
+            <div className="auth-hints" style={{marginTop:0}}>
+              <strong style={{color:'var(--ok-text)',fontSize:'1rem'}}>✅ Success! Complete setup:</strong>
+              <p style={{marginBottom:'1rem'}}>Copy the code below, open <code>index.html</code> in your editor, and replace line 200 with this code, then commit to GitHub.</p>
+              <pre style={{background:'var(--bg)',padding:'1rem',borderRadius:'6px',overflowX:'auto',border:'1px solid var(--border)',userSelect:'all',fontFamily:'monospace',fontSize:'.85rem',color:'var(--accent)'}}>{generatedCode}</pre>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return(
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-top">
           <span className="auth-arabic">بِسْمِ اللّٰهِ</span>
           <h2>Safinat al-Najat Admin</h2>
-          <p>Connect your GitHub account to manage site content</p>
+          <p>Enter the admin password to access the dashboard</p>
         </div>
         {err&&<div className="alert alert-error">{err}</div>}
         <div className="form-group">
-          <label>GitHub Personal Access Token</label>
-          <input className="input" type="password" placeholder="ghp_xxxxxxxxxxxx" value={tok} onChange={e=>setTokVal(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} autoFocus/>
-          <small>Needs <code>repo</code> scope — required for both content & quartz repos</small>
+          <label>Admin Password</label>
+          <input className="input" type="password" placeholder="••••••••" value={pwd} onChange={e=>setPwd(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} autoFocus/>
         </div>
-        <button className="btn btn-primary btn-full" onClick={submit} disabled={loading||!tok}>
-          {loading?<span className="spin"></span>:'→'} Connect
+        <button className="btn btn-primary btn-full" onClick={submit} disabled={loading||!pwd}>
+          {loading?<span className="spin"></span>:'→'} Login
         </button>
-        <div className="auth-hints">
-          <strong>How to create a token:</strong>
-          <ol>
-            <li>GitHub → Settings → Developer Settings</li>
-            <li>Personal Access Tokens → Tokens (classic)</li>
-            <li>Generate new token with <code>repo</code> scope</li>
-            <li>Paste it above</li>
-          </ol>
-        </div>
       </div>
     </div>
   );
@@ -914,15 +1013,23 @@ function SettingsPage(){
   );
 }
 
+/* ============ AUTH ============ */
+
+
 /* ============ APP ROOT ============ */
 function App(){
   const [authed,setAuthed]=useState(false);
   const [page,setPage]=useState('folders');
-  const [dark,setDark]=useState(localStorage.getItem('dark_mode')!=='false');
+  const [dark,setDark]=useState(false); // Default to false, will be set by useEffect
 
   useEffect(()=>{
+    const savedDark=localStorage.getItem('quartz_admin_dark');
+    if(savedDark!==null)setDark(savedDark==='true');
+    else setDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  },[]);
+  useEffect(()=>{
     document.documentElement.setAttribute('data-theme',dark?'dark':'light');
-    localStorage.setItem('dark_mode',dark);
+    localStorage.setItem('quartz_admin_dark',dark);
   },[dark]);
 
   useEffect(()=>{
