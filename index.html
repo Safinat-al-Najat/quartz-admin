@@ -237,12 +237,48 @@ const gPut=(r,p,content,sha,msg)=>gh(epath(r,p),{method:'PUT',body:JSON.stringif
 const gCreate=(r,p,content,msg)=>gh(epath(r,p),{method:'PUT',body:JSON.stringify({message:msg,content:enc(content),branch:r.branch})});
 const gDel=(r,p,sha,msg)=>gh(epath(r,p),{method:'DELETE',body:JSON.stringify({message:msg,sha,branch:r.branch})});
 const gList=(r,p)=>gh(epath(r,p)+`?ref=${r.branch}`);
+const extractWeight=(content)=>{
+  if(!content) return 999;
+  const match = content.match(/weight:\s*(\d+)/);
+  return match ? parseInt(match[1], 10) : 999;
+};
+
 async function getTree(p,repo=CR){
   const data=await gList(repo,p);
-  const files=data.filter(i=>i.type==='file'&&i.name.endsWith('.md'));
-  const dirs=data.filter(i=>i.type==='dir');
-  const subs=await Promise.all(dirs.map(async d=>({name:d.name,path:d.path,type:'dir',...await getTree(d.path,repo)})));
-  return{files:files.map(f=>({name:f.name,path:f.path,sha:f.sha,type:'file'})),folders:subs};
+  const filesList=data.filter(i=>i.type==='file'&&i.name.endsWith('.md')&&i.name!=='index.md');
+  const dirsList=data.filter(i=>i.type==='dir');
+  
+  // Fetch files and their weights
+  const files = await Promise.all(filesList.map(async f => {
+    let weight = 999;
+    try {
+      const fileRes = await gGet(repo, f.path);
+      weight = extractWeight(dec(fileRes.content));
+    } catch(e) {}
+    return { name: f.name, path: f.path, sha: f.sha, type: 'file', weight };
+  }));
+
+  // Fetch folders and their tree + weights
+  const folders = await Promise.all(dirsList.map(async d => {
+    let weight = 999;
+    try {
+      // Check for index.md to get folder weight
+      const idxRes = await gGet(repo, `${d.path}/index.md`);
+      weight = extractWeight(dec(idxRes.content));
+    } catch(e) {}
+    return { name: d.name, path: d.path, type: 'dir', weight, ...await getTree(d.path, repo) };
+  }));
+
+  // Sort by weight, then alphabetically as fallback
+  const sorter = (a, b) => {
+    if (a.weight !== b.weight) return a.weight - b.weight;
+    return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+  };
+  
+  files.sort(sorter);
+  folders.sort(sorter);
+
+  return { files, folders };
 }
 const countF=(s)=>s.files.length+s.folders.reduce((a,f)=>a+countF(f),0);
 
@@ -921,7 +957,6 @@ function SettingsPage(){
     }catch(e){toast.err('Save failed: '+e.message);}
     finally{setSavingL(false);}
   };
-
   const saveTheme=async()=>{
     setSavingT(true);
     try{
@@ -938,7 +973,14 @@ function SettingsPage(){
           return `${open}${newInner}${close}`;
         });
       } else {
-        ns = block + '\n' + ns;
+        // If no :root exists, append it *after* any @use or @import rules
+        const importsRegex = /^(@(?:use|import).*?;[ \t]*\n)+/gm;
+        const match = importsRegex.exec(ns);
+        if (match) {
+          ns = ns.substring(0, match.index + match[0].length) + '\n' + block + '\n' + ns.substring(match.index + match[0].length);
+        } else {
+          ns = block + '\n' + ns;
+        }
       }
       
       if(scssSha){await gPut(QR,'quartz/styles/custom.scss',ns,scssSha,'🎨 Update theme colors via Admin Dashboard');}
