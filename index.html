@@ -586,22 +586,65 @@ function FolderPage(){
     };
 
     let err=0;
-    toast.info(`Updating order for ${tasks.length} items...`);
-    for(const {item,weight} of tasks){
-      const fPath=item.type==='dir'?`${item.path}/index.md`:item.path;
-      try{
-        const fileRes=await gGet(CR,fPath).catch(()=>null);
+    toast.info(`Creating a single bulk commit for ${tasks.length} items...`);
+    
+    try {
+      // 1. Get current branch ref to get latest commit SHA
+      const ref = await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`);
+      const latestCommitSha = ref.object.sha;
+      
+      // 2. Get the commit to get its tree SHA
+      const commit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits/${latestCommitSha}`);
+      const baseTreeSha = commit.tree.sha;
+
+      // 3. Prepare the new tree array
+      const tree = [];
+      for(const {item,weight} of tasks){
+        const fPath=item.type==='dir'?`${item.path}/index.md`:item.path;
         let nContent=`---\ntitle: ${item.name}\nweight: ${weight}\n---\n`;
-        let sha;
-        if(fileRes&&fileRes.content){
-          nContent=setWeight(dec(fileRes.content),weight);
-          sha=fileRes.sha;
-        }
-        if(sha)await gPut(CR,fPath,nContent,sha,`📝 Update weight to ${weight}`);
-        else await gCreate(CR,fPath,nContent,`✨ Create index to set weight to ${weight}`);
-      }catch(e){err++;console.error(e);}
+        try{
+          const fileRes=await gGet(CR,fPath).catch(()=>null);
+          if(fileRes&&fileRes.content){
+            nContent=setWeight(dec(fileRes.content),weight);
+          }
+          tree.push({
+            path: fPath,
+            mode: '100644',
+            type: 'blob',
+            content: nContent
+          });
+        }catch(e){err++;console.error(e);}
+      }
+
+      if (tree.length > 0) {
+        // 4. Create new tree
+        const newTree = await gh(`/repos/${CR.owner}/${CR.name}/git/trees`, {
+          method: 'POST',
+          body: JSON.stringify({ base_tree: baseTreeSha, tree })
+        });
+
+        // 5. Create new commit
+        const newCommit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits`, {
+          method: 'POST',
+          body: JSON.stringify({
+            message: `🗂️ Bulk update folder/file weights via Admin Dashboard`,
+            tree: newTree.sha,
+            parents: [latestCommitSha]
+          })
+        });
+
+        // 6. Update reference
+        await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ sha: newCommit.sha, force: false })
+        });
+      }
+    } catch(e) {
+      toast.err('Bulk commit failed: ' + e.message);
+      err++;
     }
-    if(err>0)toast.err(`Failed to update ${err} files.`);
+    
+    if(err>0)toast.err(`Failed to update some files.`);
   };
 
   const deploy=async()=>{
