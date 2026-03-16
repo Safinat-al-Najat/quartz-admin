@@ -935,8 +935,8 @@ function SettingsPage(){
       try{
         const sf=await gGet(QR,'quartz/styles/custom.scss');
         const sc=dec(sf.content);setScss(sc);setScssSha(sf.sha);
-        const pm=sc.match(/--primary:\s*(#[0-9a-fA-F]{6})/);
-        const am=sc.match(/--accent:\s*(#[0-9a-fA-F]{6})/);
+        const pm=sc.match(/--primary:\s*(#[0-9a-fA-F]{3,6})/);
+        const am=sc.match(/--accent:\s*(#[0-9a-fA-F]{3,6})/);
         if(pm)setPrimary(pm[1]);if(am)setAccent(am[1]);
       }catch(e){}
       try{
@@ -995,8 +995,8 @@ function SettingsPage(){
         nl = nl.substring(0, blockStart) + newBlock + nl.substring(blockEnd);
       });
       
-      await gPut(QR,'quartz.layout.ts',nl,layoutSha,'⚙️ Update feature toggles via Admin Dashboard');
-      setLayout(nl);toast.ok('Features saved! Quartz rebuilds shortly.');
+      const res = await gPut(QR,'quartz.layout.ts',nl,layoutSha,'⚙️ Update feature toggles via Admin Dashboard');
+      setLayout(nl);setLayoutSha(res.content.sha);toast.ok('Features saved! Quartz rebuilds shortly.');
     }catch(e){toast.err('Save failed: '+e.message);}
     finally{setSavingL(false);}
   };
@@ -1026,9 +1026,10 @@ function SettingsPage(){
         }
       }
       
-      if(scssSha){await gPut(QR,'quartz/styles/custom.scss',ns,scssSha,'🎨 Update theme colors via Admin Dashboard');}
-      else{await gCreate(QR,'quartz/styles/custom.scss',ns,'🎨 Create custom theme via Admin Dashboard');}
-      setScss(ns);toast.ok('Theme saved! Site will rebuild with new colors.');
+      let res;
+      if(scssSha){res = await gPut(QR,'quartz/styles/custom.scss',ns,scssSha,'🎨 Update theme colors via Admin Dashboard');}
+      else{res = await gCreate(QR,'quartz/styles/custom.scss',ns,'🎨 Create custom theme via Admin Dashboard');}
+      setScss(ns);setScssSha(res.content.sha);toast.ok('Theme saved! Site will rebuild with new colors.');
     }catch(e){toast.err('Theme save failed: '+e.message);}
     finally{setSavingT(false);}
   };
