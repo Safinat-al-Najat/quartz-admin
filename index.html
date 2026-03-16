@@ -1,1036 +1,953 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quartz Admin Dashboard - Safinat al-Najat</title>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@hello-pangea/dnd@16.3.0/dist/dnd.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --primary: #2d6a4f;
-      --primary-light: #40916c;
-      --primary-dark: #1b4332;
-      --accent: #d4af37;
-      --bg-main: #fafafa;
-      --bg-secondary: #ffffff;
-      --bg-tertiary: #f5f5f5;
-      --text-primary: #1a1a1a;
-      --text-secondary: #666666;
-      --border: #e0e0e0;
-      --success: #52b788;
-      --warning: #f4a261;
-      --danger: #e63946;
-      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.12);
-    }
-
-    body {
-      font-family: 'IBM Plex Sans', sans-serif;
-      background: var(--bg-main);
-      color: var(--text-primary);
-      line-height: 1.6;
-    }
-
-    .app {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Header */
-    .header {
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-      color: white;
-      padding: 1.5rem 2rem;
-      box-shadow: var(--shadow-lg);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-content {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: var(--accent);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Amiri', serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-
-    .logo h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .sync-status {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem 1rem;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      font-size: 0.9rem;
-    }
-
-    .sync-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    /* Main Content */
-    .main {
-      flex: 1;
-      max-width: 1400px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      border-bottom: 2px solid var(--border);
-      overflow-x: auto;
-    }
-
-    .tab {
-      padding: 0.75rem 1.5rem;
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
-      color: var(--text-secondary);
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-      position: relative;
-      margin-bottom: -2px;
-    }
-
-    .tab:hover {
-      color: var(--primary);
-    }
-
-    .tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    /* Cards */
-    .card {
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      margin-bottom: 1.5rem;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .card-description {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-    }
-
-    /* Form Elements */
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    .form-input,
-    .form-select {
-      width: 100%;
-      padding: 0.75rem;
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      font-size: 1rem;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-
-    .form-input:focus,
-    .form-select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-
-    /* Buttons */
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .btn-secondary {
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-    }
-
-    .btn-secondary:hover {
-      background: var(--border);
-    }
-
-    .btn-success {
-      background: var(--success);
-      color: white;
-    }
-
-    .btn-success:hover {
-      background: #3d9970;
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-
-    /* Color Picker Grid */
-    .color-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-
-    .color-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .color-picker {
-      width: 60px;
-      height: 40px;
-      border: 2px solid var(--border);
-      border-radius: 6px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    .color-picker:hover {
-      transform: scale(1.05);
-    }
-
-    .color-label {
-      flex: 1;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-
-    /* Toggle Switch */
-    .toggle-group {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .toggle-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background: var(--bg-tertiary);
-      border-radius: 8px;
-    }
-
-    .toggle-info h4 {
-      font-size: 1rem;
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-
-    .toggle-info p {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    .toggle-switch {
-      position: relative;
-      width: 50px;
-      height: 26px;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .toggle-slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--border);
-      transition: 0.3s;
-      border-radius: 26px;
-    }
-
-    .toggle-slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: 0.3s;
-      border-radius: 50%;
-    }
-
-    input:checked + .toggle-slider {
-      background-color: var(--primary);
-    }
-
-    input:checked + .toggle-slider:before {
-      transform: translateX(24px);
-    }
-
-    /* Content Manager */
-    .content-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .content-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: var(--bg-tertiary);
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      cursor: move;
-      transition: all 0.2s;
-    }
-
-    .content-item:hover {
-      border-color: var(--primary);
-      transform: translateX(4px);
-    }
-
-    .content-item.dragging {
-      opacity: 0.5;
-    }
-
-    .drag-handle {
-      color: var(--text-secondary);
-      font-size: 1.2rem;
-    }
-
-    .content-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      background: var(--bg-secondary);
-    }
-
-    .content-info {
-      flex: 1;
-    }
-
-    .content-name {
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-
-    .content-meta {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    /* GitHub Setup */
-    .setup-box {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border: 2px dashed var(--primary);
-      border-radius: 12px;
-      padding: 2rem;
-      text-align: center;
-    }
-
-    .setup-box h3 {
-      margin-bottom: 1rem;
-      color: var(--primary);
-    }
-
-    .setup-steps {
-      text-align: left;
-      max-width: 600px;
-      margin: 1.5rem auto;
-      background: white;
-      padding: 1.5rem;
-      border-radius: 8px;
-    }
-
-    .setup-steps ol {
-      padding-left: 1.5rem;
-    }
-
-    .setup-steps li {
-      margin-bottom: 1rem;
-      line-height: 1.8;
-    }
-
-    .setup-steps code {
-      background: var(--bg-tertiary);
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-    }
-
-    /* Success/Error Messages */
-    .message {
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .message-success {
-      background: #d1f4e0;
-      color: #1b4332;
-      border: 1px solid var(--success);
-    }
-
-    .message-error {
-      background: #ffe0e0;
-      color: #8b0000;
-      border: 1px solid var(--danger);
-    }
-
-    /* Loading Spinner */
-    .spinner {
-      border: 3px solid var(--border);
-      border-top: 3px solid var(--primary);
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .main {
-        padding: 1rem;
-      }
-
-      .header-content {
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      .color-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safinat al-Najat — Admin</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root,[data-theme=light]{--bg:#f0f4f0;--bg2:#ffffff;--bg3:#f5f7f5;--sidebar:#1b4332;--sidebar2:#163828;--stext:rgba(255,255,255,0.9);--sdim:rgba(255,255,255,0.5);--text:#111827;--text2:#6b7280;--border:#e5e7eb;--primary:#2d6a4f;--pl:#40916c;--accent:#d4af37;--danger:#dc2626;--warn-bg:#fef3c7;--warn-text:#92400e;--err-bg:#fee2e2;--err-text:#991b1b;--ok-bg:#d1fae5;--ok-text:#065f46;--sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);--shlg:0 10px 30px rgba(0,0,0,.12);--radius:12px}
+[data-theme=dark]{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--sidebar:#0d1117;--sidebar2:#010409;--stext:rgba(255,255,255,0.85);--sdim:rgba(255,255,255,0.4);--text:#e6edf3;--text2:#8b949e;--border:#30363d;--sh:0 1px 3px rgba(0,0,0,.3);--shlg:0 10px 30px rgba(0,0,0,.5);--warn-bg:#2a1f00;--warn-text:#f59e0b;--err-bg:#2a0f0f;--err-text:#f87171;--ok-bg:#0d2818;--ok-text:#34d399}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.app{display:flex;height:100vh;overflow:hidden}
+/* SIDEBAR */
+.sidebar{width:260px;flex-shrink:0;background:var(--sidebar);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06)}
+.sb-brand{padding:1.5rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.875rem}
+.sb-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),#b8941f);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:1.5rem;color:#1b4332;font-weight:700;flex-shrink:0}
+.sb-name{color:var(--stext);font-weight:600;font-size:.95rem;line-height:1.2}
+.sb-sub{color:var(--sdim);font-size:.72rem}
+.sb-nav{flex:1;padding:1rem .75rem;display:flex;flex-direction:column;gap:.25rem}
+.nav-btn{width:100%;background:none;border:none;border-radius:10px;padding:.75rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.875rem;transition:all .2s;text-align:left}
+.nav-btn:hover{background:rgba(255,255,255,.08)}
+.nav-btn.active{background:rgba(64,145,108,.25);outline:1.5px solid rgba(64,145,108,.4)}
+.nav-icon{font-size:1.25rem;width:28px;text-align:center;flex-shrink:0}
+.nav-lbl{color:var(--stext);font-size:.88rem;font-weight:500;display:block}
+.nav-desc{color:var(--sdim);font-size:.72rem;display:block}
+.sb-foot{padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,.08)}
+.connected-dot{display:flex;align-items:center;gap:.5rem;color:var(--sdim);font-size:.78rem}
+.dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.hdr{padding:1.25rem 2rem;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hdr-left h1{font-size:1.25rem;font-weight:600}
+.hdr-left p{color:var(--text2);font-size:.82rem;margin-top:.1rem}
+.hdr-right{display:flex;align-items:center;gap:.75rem}
+.content{flex:1;overflow-y:auto;padding:2rem}
+/* BUTTONS */
+.btn{padding:.6rem 1.25rem;border:none;border-radius:8px;font-size:.875rem;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .15s;font-family:'Inter',sans-serif}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--pl)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{opacity:.85}
+.btn-ghost{background:none;color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{background:var(--bg3)}
+.btn-sm{padding:.4rem .875rem;font-size:.8rem}
+.btn-icon{background:none;border:none;cursor:pointer;padding:.4rem;border-radius:6px;color:var(--text2);font-size:1rem;transition:all .15s}.btn-icon:hover{background:var(--bg3);color:var(--text)}
+.btn-ico-sm{background:none;border:none;cursor:pointer;padding:.2rem .35rem;border-radius:4px;font-size:.85rem;opacity:.6;transition:all .15s}.btn-ico-sm:hover{opacity:1;background:var(--bg3)}
+.btn-ico-danger:hover{background:var(--err-bg);color:var(--danger)}
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--sh);margin-bottom:1.25rem}
+/* ALERTS */
+.alert{padding:.875rem 1.125rem;border-radius:8px;font-size:.875rem;margin-bottom:1rem}
+.alert-warn{background:var(--warn-bg);color:var(--warn-text)}
+.alert-error{background:var(--err-bg);color:var(--err-text)}
+.alert-ok{background:var(--ok-bg);color:var(--ok-text)}
+/* INPUTS */
+.input{width:100%;padding:.6rem .875rem;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.875rem;font-family:'Inter',sans-serif;transition:border-color .15s;outline:none}
+.input:focus{border-color:var(--primary)}
+.input-sm{width:auto;padding:.35rem .6rem}
+.form-group{margin-bottom:1.125rem}
+.form-group label{display:block;font-size:.82rem;font-weight:500;color:var(--text2);margin-bottom:.4rem}
+.form-group small{display:block;font-size:.75rem;color:var(--text2);margin-top:.35rem}
+.form-group code{background:var(--bg3);padding:.1rem .35rem;border-radius:4px;font-size:.8rem}
+/* BADGE */
+.badge{background:var(--primary);color:#fff;padding:.15rem .55rem;border-radius:20px;font-size:.72rem;font-weight:600}
+.badge-sm{background:var(--bg3);color:var(--text2);padding:.1rem .4rem;border-radius:10px;font-size:.7rem;border:1px solid var(--border)}
+/* SPINNER */
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+.spin-dark{border-color:rgba(0,0,0,.15);border-top-color:var(--primary)}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* SKELETON */
+.skel{background:linear-gradient(90deg,var(--bg3) 25%,var(--border) 50%,var(--bg3) 75%);background-size:200% 100%;animation:skel 1.4s infinite;border-radius:8px}
+@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{height:80px;margin-bottom:1rem}
+.skel-row{height:44px;margin-bottom:.5rem}
+/* TOAST */
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.625rem;pointer-events:none}
+.toast{padding:.75rem 1.125rem;border-radius:10px;background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shlg);display:flex;align-items:center;gap:.625rem;font-size:.875rem;animation:slideIn .25s ease;pointer-events:auto;min-width:280px}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:8888;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:90%;max-width:480px;box-shadow:var(--shlg);animation:popIn .2s ease}
+@keyframes popIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-hdr{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-hdr h3{font-size:1rem;font-weight:600}
+.modal-body{padding:1.5rem}
+.modal-foot{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.625rem}
+/* ACTION BAR */
+.action-bar{display:flex;gap:.75rem;padding-top:1rem;border-top:1px solid var(--border);margin-top:1rem}
+/* FOLDER ORGANIZER */
+.folder-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.875rem;transition:all .2s;cursor:grab}
+.folder-card:hover{box-shadow:var(--shlg);border-color:var(--primary)}
+.folder-card.drag-over{border-color:var(--accent);box-shadow:0 0 0 3px rgba(212,175,55,.2);transform:scale(1.01)}
+.folder-main{display:flex;align-items:center;gap:1rem;padding:1.125rem 1.25rem}
+.drag-handle{color:var(--text2);font-size:1.2rem;cursor:grab;user-select:none;letter-spacing:-2px}
+.folder-emoji{font-size:1.75rem;width:44px;text-align:center;flex-shrink:0}
+.folder-name{font-weight:600;font-size:.95rem}
+.folder-meta{display:flex;align-items:center;gap:.625rem;margin-top:.25rem}
+.folder-actions{display:flex;align-items:center;gap:.5rem;margin-left:auto}
+.order-badge{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:.2rem .5rem;border-radius:6px;font-size:.75rem;font-weight:600}
+.folder-tree{border-top:1px solid var(--border);padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.35rem}
+.tree-sub{display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;background:var(--bg3);border-radius:8px;font-size:.82rem}
+.tree-file-item{display:flex;align-items:center;gap:.5rem;padding:.35rem .75rem;border-radius:6px;font-size:.8rem;color:var(--text2)}
+.tree-file-item:hover{background:var(--bg3)}
+.tree-sub.drag-over,.tree-file-item.drag-over{border:2px dashed var(--accent);background:rgba(212,175,55,.08);transform:scale(1.01)}
+/* FILE MANAGER */
+.fm-wrap{display:flex;gap:0;height:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.fm-sidebar{width:200px;flex-shrink:0;border-right:1px solid var(--border);background:var(--bg3);padding:.875rem}
+.fm-sidebar-title{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:.625rem;padding:0 .25rem}
+.fm-cat-btn{width:100%;display:flex;align-items:center;gap:.625rem;padding:.625rem .75rem;background:none;border:none;border-radius:8px;cursor:pointer;color:var(--text);font-size:.875rem;text-align:left;transition:all .15s}
+.fm-cat-btn:hover{background:var(--bg2)}
+.fm-cat-btn.active{background:rgba(45,106,79,.15);color:var(--primary);font-weight:500}
+.fm-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.fm-toolbar{display:flex;align-items:center;justify-content:space-between;padding:.875rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.fm-title{font-weight:600}
+.fm-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text2);gap:.75rem}
+.fm-empty-ico{font-size:3rem}
+.file-tree{flex:1;overflow-y:auto;padding:.75rem}
+.tree-item{display:flex;align-items:center;border-radius:8px;transition:background .15s}
+.tree-item:hover{background:var(--bg3)}
+.tree-folder-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;cursor:pointer;flex:1;font-size:.875rem;font-weight:500}
+.tree-file-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem .75rem;flex:1}
+.tree-file-name{font-size:.82rem;cursor:pointer;color:var(--text);flex:1}
+.tree-file-name:hover{color:var(--primary)}
+.tree-file-btns{display:flex;gap:.25rem;opacity:0;transition:opacity .15s}
+.tree-item:hover .tree-file-btns{opacity:1}
+/* SETTINGS */
+.settings-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem}
+.settings-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.settings-title{font-size:1rem;font-weight:600}
+.settings-sub{color:var(--text2);font-size:.78rem;margin-top:.2rem}
+.color-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+.color-item label{font-size:.82rem;font-weight:500;color:var(--text2);display:block;margin-bottom:.5rem}
+.color-row{display:flex;align-items:center;gap:.625rem}
+.color-swatch{width:40px;height:38px;padding:2px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:none}
+.color-preview{height:70px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:600;color:#fff}
+.toggles{display:flex;flex-direction:column;gap:0}
+.toggle-row{display:flex;align-items:center;gap:1rem;padding:.875rem 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-ico{font-size:1.25rem;width:32px;text-align:center}
+.toggle-info{flex:1}
+.toggle-lbl{font-size:.875rem;font-weight:500}
+.toggle-desc{font-size:.78rem;color:var(--text2)}
+.switch{width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:all .2s;position:relative;flex-shrink:0}
+.switch.on{background:var(--primary)}.switch.off{background:var(--border)}
+.switch-thumb{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;transition:left .2s}
+.switch.on .switch-thumb{left:23px}.switch.off .switch-thumb{left:3px}
+.repo-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.repo-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem}
+.repo-lbl{font-size:.75rem;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem}
+.repo-val{font-weight:600;font-size:.88rem}
+.repo-branch{font-size:.78rem;color:var(--primary);margin-top:.2rem}
+/* AUTH */
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:2rem}
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2.5rem;width:100%;max-width:440px;box-shadow:var(--shlg)}
+.auth-top{text-align:center;margin-bottom:2rem}
+.auth-arabic{font-family:'Amiri',serif;font-size:1.75rem;color:var(--primary);display:block;margin-bottom:.75rem}
+.auth-card h2{font-size:1.4rem;margin-bottom:.4rem}
+.auth-card p{color:var(--text2);font-size:.875rem}
+.btn-full{width:100%;justify-content:center}
+.auth-hints{margin-top:1.25rem;background:var(--bg3);border-radius:8px;padding:1rem;font-size:.78rem;color:var(--text2)}
+.auth-hints strong{display:block;margin-bottom:.4rem;color:var(--text)}
+.auth-hints ol{margin-left:1.25rem}
+.auth-hints li{margin-bottom:.2rem}
+.auth-hints code{background:var(--border);padding:.05rem .3rem;border-radius:3px}
+/* FILE PREVIEW */
+.file-preview{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;font-size:.8rem;font-family:monospace;white-space:pre-wrap;max-height:400px;overflow-y:auto;color:var(--text)}
+</style>
 </head>
 <body>
-  <div id="root"></div>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+const GAPI = 'https://api.github.com';
+const CR = {owner:'Safinat-al-Najat',name:'safinat-al-najat.github.io',branch:'main'};
+const QR = {owner:'Safinat-al-Najat',name:'quartz',branch:'v4'};
+const CATS = [
+  {id:'merits',name:'MERITS',icon:'🌟',path:'MERITS',slug:'MERITS',display:'Merits',desc:'Virtues of the Ahlulbayt & companions'},
+  {id:'history',name:'MAJOR HISTORICAL EVENTS',icon:'📜',path:'MAJOR HISTORICAL EVENTS',slug:'MAJOR%20HISTORICAL%20EVENTS',display:'History',desc:'Key events in Islamic history'},
+  {id:'rulings',name:'RULINGS OF ISLAM',icon:'⚖️',path:'RULINGS OF ISLAM',slug:'RULINGS%20OF%20ISLAM',display:'Rulings',desc:'Fiqh, obligations & Islamic law'},
+];
+const TOGGLES = [
+  {key:'Explorer',label:'Explorer Sidebar',icon:'🗂️',desc:'Folder tree sidebar navigation',comp:'Component.Explorer()'},
+  {key:'RecentNotes',label:'Recent Notes',icon:'🕐',desc:'Recently updated notes widget',comp:'Component.RecentNotes'},
+  {key:'Backlinks',label:'Backlinks',icon:'🔗',desc:'Pages linking to current page',comp:'Component.Backlinks()'},
+  {key:'TableOfContents',label:'Table of Contents',icon:'📋',desc:'Auto-generated content outline',comp:'Component.TableOfContents()'},
+  {key:'Breadcrumbs',label:'Breadcrumbs',icon:'🍞',desc:'Navigation path indicator',comp:'Component.Breadcrumbs()'},
+];
+let _tok='';
+const setTok=(t)=>{_tok=t;};
+const enc=(s)=>btoa(unescape(encodeURIComponent(s)));
+const dec=(b)=>decodeURIComponent(escape(atob(b.replace(/\n/g,''))));
+const epath=(r,p)=>`/repos/${r.owner}/${r.name}/contents/${encodeURIComponent(p).replace(/%2F/g,'/')}`;
+async function gh(ep,opts={}){
+  const r=await fetch(GAPI+ep,{...opts,headers:{'Authorization':`Bearer ${_tok}`,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||`HTTP ${r.status}`);}
+  return r.json();
+}
+const gGet=(r,p)=>gh(epath(r,p)+`?ref=${r.branch}`);
+const gPut=(r,p,content,sha,msg)=>gh(epath(r,p),{method:'PUT',body:JSON.stringify({message:msg,content:enc(content),sha,branch:r.branch})});
+const gCreate=(r,p,content,msg)=>gh(epath(r,p),{method:'PUT',body:JSON.stringify({message:msg,content:enc(content),branch:r.branch})});
+const gDel=(r,p,sha,msg)=>gh(epath(r,p),{method:'DELETE',body:JSON.stringify({message:msg,sha,branch:r.branch})});
+const gList=(r,p)=>gh(epath(r,p)+`?ref=${r.branch}`);
+async function getTree(p,repo=CR){
+  const data=await gList(repo,p);
+  const files=data.filter(i=>i.type==='file'&&i.name.endsWith('.md'));
+  const dirs=data.filter(i=>i.type==='dir');
+  const subs=await Promise.all(dirs.map(async d=>({name:d.name,path:d.path,type:'dir',...await getTree(d.path,repo)})));
+  return{files:files.map(f=>({name:f.name,path:f.path,sha:f.sha,type:'file'})),folders:subs};
+}
+const countF=(s)=>s.files.length+s.folders.reduce((a,f)=>a+countF(f),0);
 
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+/* TOAST */
+let _toast=null;
+const toast={ok:(m)=>_toast?.('ok',m),err:(m)=>_toast?.('err',m),info:(m)=>_toast?.('info',m)};
+function Toasts(){
+  const [list,setList]=useState([]);
+  useEffect(()=>{
+    _toast=(type,text)=>{const id=Date.now();setList(p=>[...p,{id,type,text}]);setTimeout(()=>setList(p=>p.filter(t=>t.id!==id)),4000);};
+    return()=>{_toast=null;};
+  },[]);
+  const ico={ok:'✅',err:'❌',info:'ℹ️'};
+  return <div className="toast-wrap">{list.map(t=><div key={t.id} className="toast"><span>{ico[t.type]}</span><span>{t.text}</span></div>)}</div>;
+}
 
-    // GitHub API Configuration
-    const GITHUB_API = 'https://api.github.com';
-    const REPO_OWNER = 'Safinat-al-Najat';
-    const REPO_NAME = 'quartz';
-    const BRANCH = 'v4';
+/* MODAL */
+function Modal({title,children,onClose,footer}){
+  return(
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <div className="modal-hdr"><h3>{title}</h3><button className="btn-icon" onClick={onClose}>✕</button></div>
+        <div className="modal-body">{children}</div>
+        {footer&&<div className="modal-foot">{footer}</div>}
+      </div>
+    </div>
+  );
+}
 
-    function App() {
-      const [activeTab, setActiveTab] = useState('content');
-      const [githubToken, setGithubToken] = useState(localStorage.getItem('github_token') || '');
-      const [isConfigured, setIsConfigured] = useState(false);
-      const [loading, setLoading] = useState(false);
-      const [message, setMessage] = useState(null);
+/* SIDEBAR */
+const PAGES=[
+  {id:'folders',icon:'⠿',label:'Folder Organizer',desc:'Reorder homepage sections'},
+  {id:'files',icon:'📁',label:'File Manager',desc:'Create, rename & delete files'},
+  {id:'settings',icon:'⚙️',label:'Settings',desc:'Theme & site configuration'},
+];
+function Sidebar({page,setPage}){
+  return(
+    <div className="sidebar">
+      <div className="sb-brand">
+        <div className="sb-icon">س</div>
+        <div><div className="sb-name">Safinat al-Najat</div><div className="sb-sub">Admin Dashboard</div></div>
+      </div>
+      <nav className="sb-nav">
+        {PAGES.map(p=>(
+          <button key={p.id} className={`nav-btn ${page===p.id?'active':''}`} onClick={()=>setPage(p.id)}>
+            <span className="nav-icon">{p.icon}</span>
+            <span><span className="nav-lbl">{p.label}</span><span className="nav-desc">{p.desc}</span></span>
+          </button>
+        ))}
+      </nav>
+      <div className="sb-foot"><div className="connected-dot"><div className="dot"></div><span>Connected to GitHub</span></div></div>
+    </div>
+  );
+}
 
-      // Content Management State
-      const [folders, setFolders] = useState([
-        { id: 'merits', name: 'MERITS', icon: '🌟', type: 'folder', fileCount: 0 },
-        { id: 'history', name: 'MAJOR HISTORICAL EVENTS', icon: '📜', type: 'folder', fileCount: 0 },
-        { id: 'rulings', name: 'RULINGS OF ISLAM', icon: '⚖️', type: 'folder', fileCount: 0 },
-      ]);
+/* HEADER */
+function Header({page,dark,setDark,onLogout}){
+  const info={
+    folders:{t:'Folder Organizer',s:'Drag to reorder homepage sections'},
+    files:{t:'File Manager',s:'Browse, create, rename & delete content files'},
+    settings:{t:'Settings',s:'Configure theme colors and site features'},
+  };
+  const {t,s}=info[page]||info.folders;
+  return(
+    <div className="hdr">
+      <div className="hdr-left"><h1>{t}</h1><p>{s}</p></div>
+      <div className="hdr-right">
+        <button className="btn-icon" onClick={()=>setDark(d=>!d)} title="Toggle dark mode">{dark?'☀️':'🌙'}</button>
+        <button className="btn btn-ghost btn-sm" onClick={onLogout}>🔑 Change Token</button>
+      </div>
+    </div>
+  );
+}
 
-      // Theme State
-      const [theme, setTheme] = useState({
-        lightMode: {
-          light: '#ffffff',
-          lightgray: '#f0f0f0',
-          gray: '#a0a0a0',
-          darkgray: '#333333',
-          dark: '#111111',
-          secondary: '#388e3c',
-          tertiary: '#81c784',
-          highlight: 'rgba(56, 142, 60, 0.1)',
-        },
-        darkMode: {
-          light: '#1a1b1e',
-          lightgray: '#2c2e33',
-          gray: '#909296',
-          darkgray: '#c1c2c5',
-          dark: '#ffffff',
-          secondary: '#69db7c',
-          tertiary: '#b2f2bb',
-          highlight: 'rgba(105, 219, 124, 0.1)',
-        }
-      });
+/* ============ AUTH PAGE ============ */
+function AuthPage({onAuth}){
+  const [tok,setTokVal]=useState('');
+  const [loading,setLoading]=useState(false);
+  const [err,setErr]=useState('');
+  const submit=async()=>{
+    if(!tok.trim())return;
+    setLoading(true);setErr('');
+    try{
+      setTok(tok);
+      const r=await fetch(`${GAPI}/repos/${CR.owner}/${CR.name}`,{headers:{'Authorization':`Bearer ${tok}`}});
+      if(!r.ok)throw new Error('Invalid token or no access to the content repository');
+      localStorage.setItem('github_token',tok);
+      onAuth(tok);
+    }catch(e){setTok('');setErr(e.message);}
+    finally{setLoading(false);}
+  };
+  return(
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-top">
+          <span className="auth-arabic">بِسْمِ اللّٰهِ</span>
+          <h2>Safinat al-Najat Admin</h2>
+          <p>Connect your GitHub account to manage site content</p>
+        </div>
+        {err&&<div className="alert alert-error">{err}</div>}
+        <div className="form-group">
+          <label>GitHub Personal Access Token</label>
+          <input className="input" type="password" placeholder="ghp_xxxxxxxxxxxx" value={tok} onChange={e=>setTokVal(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} autoFocus/>
+          <small>Needs <code>repo</code> scope — required for both content & quartz repos</small>
+        </div>
+        <button className="btn btn-primary btn-full" onClick={submit} disabled={loading||!tok}>
+          {loading?<span className="spin"></span>:'→'} Connect
+        </button>
+        <div className="auth-hints">
+          <strong>How to create a token:</strong>
+          <ol>
+            <li>GitHub → Settings → Developer Settings</li>
+            <li>Personal Access Tokens → Tokens (classic)</li>
+            <li>Generate new token with <code>repo</code> scope</li>
+            <li>Paste it above</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      // Feature Toggles State
-      const [features, setFeatures] = useState({
-        explorer: false,
-        darkmode: true,
-        search: true,
-        recentNotes: true,
-        tableOfContents: true,
-        backlinks: true,
-        breadcrumbs: true,
-      });
+/* ============ FOLDER ORGANIZER ============ */
+function FolderPage(){
+  const [folders,setFolders]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [saving,setSaving]=useState(false);
+  const [changed,setChanged]=useState(false);
+  const [exp,setExp]=useState({});
+  const [dragOver,setDragOver]=useState(null);
+  const [innerDragOver,setInnerDragOver]=useState(null);
+  const [dirtyDirs,setDirtyDirs]=useState(new Set());
+  const dragCtx=useRef(null);
 
-      // Typography State
-      const [typography, setTypography] = useState({
-        header: 'Lexend',
-        body: 'Inter',
-        code: 'IBM Plex Mono',
-      });
+  useEffect(()=>{load();},[]);
+  const load=async()=>{
+    setLoading(true);setDirtyDirs(new Set());setChanged(false);
+    try{
+      const all=await Promise.all(CATS.map(async c=>{const s=await getTree(c.path);return{...c,count:countF(s),structure:s};}));
+      setFolders(all);
+    }catch(e){toast.err('Load failed: '+e.message);}
+    finally{setLoading(false);}
+  };
 
-      useEffect(() => {
-        if (githubToken) {
-          setIsConfigured(true);
-        }
-      }, [githubToken]);
+  /* deep-clone structure helper */
+  const cloneStructure=(s)=>({files:[...s.files],folders:s.folders.map(f=>({...f,...cloneStructure(f)}))});
 
-      const handleTokenSubmit = () => {
-        if (githubToken.trim()) {
-          localStorage.setItem('github_token', githubToken);
-          setIsConfigured(true);
-          showMessage('success', '✓ GitHub token saved successfully!');
-        }
-      };
-
-      const showMessage = (type, text) => {
-        setMessage({ type, text });
-        setTimeout(() => setMessage(null), 5000);
-      };
-
-      const handleDragEnd = (result) => {
-        if (!result.destination) return;
-
-        const items = Array.from(folders);
-        const [reorderedItem] = items.splice(result.source.index, 1);
-        items.splice(result.destination.index, 0, reorderedItem);
-
-        setFolders(items);
-      };
-
-      const updateThemeColor = (mode, key, value) => {
-        setTheme(prev => ({
-          ...prev,
-          [mode]: {
-            ...prev[mode],
-            [key]: value
-          }
-        }));
-      };
-
-      const toggleFeature = (feature) => {
-        setFeatures(prev => ({
-          ...prev,
-          [feature]: !prev[feature]
-        }));
-      };
-
-      const commitChanges = async () => {
-        if (!githubToken) {
-          showMessage('error', '❌ GitHub token not configured');
-          return;
-        }
-
-        setLoading(true);
-        try {
-          // Here you would make actual GitHub API calls to update files
-          // This is a placeholder for the commit logic
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          showMessage('success', '✓ Changes committed successfully! Your site will rebuild shortly.');
-        } catch (error) {
-          showMessage('error', '❌ Failed to commit changes: ' + error.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      if (!isConfigured) {
-        return (
-          <div className="app">
-            <header className="header">
-              <div className="header-content">
-                <div className="logo">
-                  <div className="logo-icon">س</div>
-                  <h1>Quartz Admin Dashboard</h1>
-                </div>
-              </div>
-            </header>
-            <main className="main">
-              <div className="setup-box">
-                <h3>🔐 GitHub Configuration Required</h3>
-                <p>To use this dashboard, you need to configure your GitHub Personal Access Token.</p>
-                
-                <div className="setup-steps">
-                  <h4>Setup Instructions:</h4>
-                  <ol>
-                    <li>Go to <strong>GitHub Settings → Developer settings → Personal access tokens</strong></li>
-                    <li>Click <strong>"Generate new token (classic)"</strong></li>
-                    <li>Give it a name like "Quartz Admin Dashboard"</li>
-                    <li>Select the <code>repo</code> scope (full control of private repositories)</li>
-                    <li>Click <strong>"Generate token"</strong> and copy it</li>
-                    <li>Paste it below (it will be stored locally in your browser)</li>
-                  </ol>
-                </div>
-
-                <div className="form-group" style={{ maxWidth: '500px', margin: '1.5rem auto' }}>
-                  <input
-                    type="password"
-                    className="form-input"
-                    placeholder="Paste your GitHub token here..."
-                    value={githubToken}
-                    onChange={(e) => setGithubToken(e.target.value)}
-                  />
-                </div>
-
-                <button className="btn btn-primary" onClick={handleTokenSubmit}>
-                  Save Token & Continue
-                </button>
-
-                <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  ⚠️ Your token is stored only in your browser and never sent to any server except GitHub.
-                </p>
-              </div>
-            </main>
-          </div>
-        );
+  /* reorder items within a structure node identified by parentPath */
+  const reorderInStructure=(structure,parentPath,fromIdx,toIdx)=>{
+    const s=cloneStructure(structure);
+    const doReorder=(node,target)=>{
+      if(target===null){
+        /* reorder at this level */
+        const combined=[...node.folders,...node.files];
+        const [moved]=combined.splice(fromIdx,1);
+        combined.splice(toIdx,0,moved);
+        node.folders=combined.filter(i=>i.type==='dir');
+        node.files=combined.filter(i=>i.type==='file');
+        return true;
       }
+      for(let sub of node.folders){
+        if(sub.path===target){
+          const combined=[...sub.folders,...sub.files];
+          const [moved]=combined.splice(fromIdx,1);
+          combined.splice(toIdx,0,moved);
+          sub.folders=combined.filter(i=>i.type==='dir');
+          sub.files=combined.filter(i=>i.type==='file');
+          return true;
+        }
+        if(doReorder(sub,target))return true;
+      }
+      return false;
+    };
+    doReorder(s,parentPath);
+    return s;
+  };
 
-      return (
-        <div className="app">
-          <header className="header">
-            <div className="header-content">
-              <div className="logo">
-                <div className="logo-icon">س</div>
-                <h1>Quartz Admin Dashboard</h1>
-              </div>
-              <div className="sync-status">
-                <div className="sync-dot"></div>
-                <span>Connected to {REPO_OWNER}/{REPO_NAME}</span>
-              </div>
-            </div>
-          </header>
+  /* main folder drop */
+  const onMainDrop=(e,ti)=>{
+    e.preventDefault();e.stopPropagation();
+    if(!dragCtx.current||dragCtx.current.type!=='main'){setDragOver(null);return;}
+    const si=dragCtx.current.idx;
+    if(si===ti){setDragOver(null);dragCtx.current=null;return;}
+    const f=[...folders];const [m]=f.splice(si,1);f.splice(ti,0,m);
+    setFolders(f);setChanged(true);setDragOver(null);dragCtx.current=null;
+  };
 
-          <main className="main">
-            {message && (
-              <div className={`message message-${message.type}`}>
-                {message.text}
-              </div>
-            )}
+  /* inner item drop (subfolders + files within a main folder) */
+  const onInnerDrop=(e,folderIdx,parentPath,toIdx)=>{
+    e.preventDefault();e.stopPropagation();
+    if(!dragCtx.current||dragCtx.current.type!=='inner'){setInnerDragOver(null);dragCtx.current=null;return;}
+    const{folderIdx:srcFI,parentPath:srcPP,idx:fromIdx}=dragCtx.current;
+    if(srcFI!==folderIdx||srcPP!==parentPath||fromIdx===toIdx){setInnerDragOver(null);dragCtx.current=null;return;}
+    const f=[...folders];
+    f[folderIdx]={...f[folderIdx],structure:reorderInStructure(f[folderIdx].structure,parentPath,fromIdx,toIdx),count:f[folderIdx].count};
+    setFolders(f);setChanged(true);
+    setDirtyDirs(new Set([...dirtyDirs, parentPath||f[folderIdx].path]));
+    setInnerDragOver(null);dragCtx.current=null;
+  };
 
-            <div className="tabs">
-              <button 
-                className={`tab ${activeTab === 'content' ? 'active' : ''}`}
-                onClick={() => setActiveTab('content')}
-              >
-                📁 Content Manager
-              </button>
-              <button 
-                className={`tab ${activeTab === 'theme' ? 'active' : ''}`}
-                onClick={() => setActiveTab('theme')}
-              >
-                🎨 Theme Customizer
-              </button>
-              <button 
-                className={`tab ${activeTab === 'features' ? 'active' : ''}`}
-                onClick={() => setActiveTab('features')}
-              >
-                ⚙️ Features
-              </button>
-              <button 
-                className={`tab ${activeTab === 'typography' ? 'active' : ''}`}
-                onClick={() => setActiveTab('typography')}
-              >
-                🔤 Typography
-              </button>
-            </div>
+  const processWeightUpdates=async()=>{
+    const tasks=[];
+    const search=(node,path)=>{
+      if(path===null)return node;
+      for(let sub of node.folders){
+        if(sub.path===path)return sub;
+        const res=search(sub,path);
+        if(res)return res;
+      }
+      return null;
+    };
+    Array.from(dirtyDirs).forEach(dirPath=>{
+      const top=folders.find(f=>dirPath.startsWith(f.path));
+      if(!top)return;
+      const tNode=dirPath===top.path?top.structure:search(top.structure,dirPath);
+      if(!tNode)return;
+      const combined=[...tNode.folders,...tNode.files];
+      combined.forEach((item,idx)=>{
+        tasks.push({item,weight:idx+1});
+      });
+    });
+    if(tasks.length===0)return;
 
-            {activeTab === 'content' && (
-              <div className="card">
-                <div className="card-header">
-                  <div>
-                    <h2 className="card-title">Folder Management</h2>
-                    <p className="card-description">Drag and drop to reorder folders on your homepage</p>
-                  </div>
-                </div>
+    const setWeight=(content,w)=>{
+      const lines=content.replace(/\r/g,'').split('\n');
+      if(lines[0]==='---'){
+        let e=-1;let wi=-1;
+        for(let i=1;i<lines.length;i++){
+          if(lines[i].startsWith('weight:'))wi=i;
+          if(lines[i]==='---'){e=i;break;}
+        }
+        if(e!==-1){
+          if(wi!==-1)lines[wi]=`weight: ${w}`;
+          else lines.splice(e,0,`weight: ${w}`);
+          return lines.join('\n');
+        }
+      }
+      return `---\nweight: ${w}\n---\n${content}`;
+    };
 
-                <div className="content-list">
-                  {folders.map((folder, index) => (
-                    <div key={folder.id} className="content-item">
-                      <span className="drag-handle">⋮⋮</span>
-                      <div className="content-icon">{folder.icon}</div>
-                      <div className="content-info">
-                        <div className="content-name">{folder.name}</div>
-                        <div className="content-meta">{folder.fileCount} items</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+    let err=0;
+    toast.info(`Updating order for ${tasks.length} items...`);
+    for(const {item,weight} of tasks){
+      const fPath=item.type==='dir'?`${item.path}/index.md`:item.path;
+      try{
+        const fileRes=await gGet(CR,fPath).catch(()=>null);
+        let nContent=`---\ntitle: ${item.name}\nweight: ${weight}\n---\n`;
+        let sha;
+        if(fileRes&&fileRes.content){
+          nContent=setWeight(dec(fileRes.content),weight);
+          sha=fileRes.sha;
+        }
+        if(sha)await gPut(CR,fPath,nContent,sha,`📝 Update weight to ${weight}`);
+        else await gCreate(CR,fPath,nContent,`✨ Create index to set weight to ${weight}`);
+      }catch(e){err++;console.error(e);}
+    }
+    if(err>0)toast.err(`Failed to update ${err} files.`);
+  };
 
-                <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                  💡 Tip: Drag folders to change their order on the homepage. Changes will update index.md automatically.
-                </p>
-              </div>
-            )}
+  const deploy=async()=>{
+    setSaving(true);
+    toast.info('Starting deployment... do not close the page.');
+    try{
+      const file=await gGet(CR,'index.md');
+      const cur=dec(file.content);
+      const sec=folders.map(f=>`## [${f.icon} ${f.display}](${f.slug})\n${f.desc}`).join('\n\n');
+      const lines=cur.split('\n');
+      const vi=lines.findIndex(l=>l.includes('Surah Al-Imran'));
+      const ci=lines.findIndex(l=>l.includes('For any queries'));
+      if(vi<0||ci<0)throw new Error('Cannot find section markers in index.md');
+      const newC=[...lines.slice(0,vi+1),'',sec,'',...lines.slice(ci)].join('\n');
+      await gPut(CR,'index.md',newC,file.sha,'📝 Update folder order via Admin Dashboard');
+      
+      // Update weights for dirty subfolders
+      await processWeightUpdates();
+      
+      toast.ok('Deployed successfully! Site rebuilds in ~2 min.');
+      setChanged(false);setDirtyDirs(new Set());
+    }catch(e){toast.err('Deploy failed: '+e.message);}
+    finally{setSaving(false);}
+  };
 
-            {activeTab === 'theme' && (
+  /* Recursive tree renderer with drag & drop at every level */
+  const renderInnerTree=(structure,folderIdx,parentPath,depth=0)=>{
+    const combined=[...structure.folders,...structure.files];
+    return combined.map((item,idx)=>{
+      const isDir=item.type==='dir';
+      const dragKey=`${parentPath||'root'}::${idx}`;
+      const isOver=innerDragOver===dragKey;
+      return(
+        <div key={item.path}>
+          <div
+            className={`${isDir?'tree-sub':'tree-file-item'} ${isOver?'drag-over':''}`}
+            style={{marginLeft:`${depth*16}px`,cursor:'grab',transition:'all .15s'}}
+            draggable
+            onDragStart={e=>{e.stopPropagation();dragCtx.current={type:'inner',folderIdx,parentPath,idx};e.dataTransfer.effectAllowed='move';}}
+            onDragOver={e=>{e.preventDefault();e.stopPropagation();setInnerDragOver(dragKey);}}
+            onDragLeave={e=>{e.stopPropagation();if(innerDragOver===dragKey)setInnerDragOver(null);}}
+            onDrop={e=>onInnerDrop(e,folderIdx,parentPath,idx)}
+          >
+            {isDir?(
               <>
-                <div className="card">
-                  <div className="card-header">
-                    <h2 className="card-title">Light Mode Colors</h2>
-                  </div>
-                  <div className="color-grid">
-                    {Object.entries(theme.lightMode).map(([key, value]) => (
-                      <div key={key} className="color-item">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={value.includes('rgba') ? '#388e3c' : value}
-                          onChange={(e) => updateThemeColor('lightMode', key, e.target.value)}
-                        />
-                        <div className="color-label">
-                          <strong>{key}</strong>
-                          <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{value}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="card">
-                  <div className="card-header">
-                    <h2 className="card-title">Dark Mode Colors</h2>
-                  </div>
-                  <div className="color-grid">
-                    {Object.entries(theme.darkMode).map(([key, value]) => (
-                      <div key={key} className="color-item">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={value.includes('rgba') ? '#69db7c' : value}
-                          onChange={(e) => updateThemeColor('darkMode', key, e.target.value)}
-                        />
-                        <div className="color-label">
-                          <strong>{key}</strong>
-                          <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{value}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <span style={{cursor:'pointer',display:'flex',alignItems:'center',gap:'.5rem',flex:1}} onClick={()=>setExp(e=>({...e,[item.path]:!e[item.path]}))}>
+                  {exp[item.path]?'📂':'📁'} {item.name}
+                </span>
+                <span className="badge-sm">{countF(item)}</span>
+                <span style={{fontSize:'.7rem',marginLeft:'.5rem',color:'var(--text2)'}}>{exp[item.path]?'▲':'▼'}</span>
               </>
+            ):(
+              <><span style={{display:'flex',alignItems:'center',gap:'.5rem',flex:1}}>📄 {item.name.replace('.md','')}</span><span className="drag-handle" style={{fontSize:'.8rem'}}>⠿</span></>
             )}
-
-            {activeTab === 'features' && (
-              <div className="card">
-                <div className="card-header">
-                  <h2 className="card-title">Feature Toggles</h2>
-                  <p className="card-description">Enable or disable Quartz features</p>
-                </div>
-
-                <div className="toggle-group">
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Explorer Sidebar</h4>
-                      <p>Show folder navigation in the left sidebar</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.explorer}
-                        onChange={() => toggleFeature('explorer')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Dark Mode</h4>
-                      <p>Enable dark mode toggle button</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.darkmode}
-                        onChange={() => toggleFeature('darkmode')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Search</h4>
-                      <p>Enable search functionality</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.search}
-                        onChange={() => toggleFeature('search')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Recent Notes</h4>
-                      <p>Show recently updated notes</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.recentNotes}
-                        onChange={() => toggleFeature('recentNotes')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Table of Contents</h4>
-                      <p>Show article outline in the right sidebar</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.tableOfContents}
-                        onChange={() => toggleFeature('tableOfContents')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Backlinks</h4>
-                      <p>Show pages that link to current page</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.backlinks}
-                        onChange={() => toggleFeature('backlinks')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-
-                  <div className="toggle-item">
-                    <div className="toggle-info">
-                      <h4>Breadcrumbs</h4>
-                      <p>Show navigation path at top of pages</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={features.breadcrumbs}
-                        onChange={() => toggleFeature('breadcrumbs')}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'typography' && (
-              <div className="card">
-                <div className="card-header">
-                  <h2 className="card-title">Font Settings</h2>
-                  <p className="card-description">Choose fonts from Google Fonts</p>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Header Font</label>
-                  <select 
-                    className="form-select"
-                    value={typography.header}
-                    onChange={(e) => setTypography({ ...typography, header: e.target.value })}
-                  >
-                    <option value="Lexend">Lexend</option>
-                    <option value="Poppins">Poppins</option>
-                    <option value="Montserrat">Montserrat</option>
-                    <option value="Playfair Display">Playfair Display</option>
-                    <option value="Merriweather">Merriweather</option>
-                    <option value="Amiri">Amiri (Arabic)</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Body Font</label>
-                  <select 
-                    className="form-select"
-                    value={typography.body}
-                    onChange={(e) => setTypography({ ...typography, body: e.target.value })}
-                  >
-                    <option value="Inter">Inter</option>
-                    <option value="Open Sans">Open Sans</option>
-                    <option value="Lato">Lato</option>
-                    <option value="Roboto">Roboto</option>
-                    <option value="Source Sans Pro">Source Sans Pro</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Code Font</label>
-                  <select 
-                    className="form-select"
-                    value={typography.code}
-                    onChange={(e) => setTypography({ ...typography, code: e.target.value })}
-                  >
-                    <option value="IBM Plex Mono">IBM Plex Mono</option>
-                    <option value="Fira Code">Fira Code</option>
-                    <option value="JetBrains Mono">JetBrains Mono</option>
-                    <option value="Source Code Pro">Source Code Pro</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-              <button 
-                className="btn btn-success" 
-                onClick={commitChanges}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <div className="spinner"></div>
-                    Committing...
-                  </>
-                ) : (
-                  <>
-                    ✓ Save & Deploy Changes
-                  </>
-                )}
-              </button>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => {
-                  if (confirm('Reset all settings to default?')) {
-                    window.location.reload();
-                  }
-                }}
-              >
-                Reset to Defaults
-              </button>
-            </div>
-          </main>
+          </div>
+          {isDir&&exp[item.path]&&renderInnerTree(item,folderIdx,item.path,depth+1)}
         </div>
       );
-    }
+    });
+  };
 
-    ReactDOM.render(<App />, document.getElementById('root'));
-  </script>
+  if(loading)return <div className="content">{[1,2,3].map(i=><div key={i} className="skel skel-card"></div>)}</div>;
+  return(
+    <div className="content">
+      {changed&&<div className="alert alert-warn">⚠️ Unsaved changes — click Deploy to publish.</div>}
+      {folders.map((f,i)=>(
+        <div key={f.id} className={`folder-card ${dragOver===i?'drag-over':''}`}
+          onDragOver={e=>{e.preventDefault();if(dragCtx.current?.type==='main')setDragOver(i);}}
+          onDragLeave={()=>setDragOver(null)}
+          onDrop={e=>onMainDrop(e,i)}>
+          <div className="folder-main" draggable
+            onDragStart={e=>{dragCtx.current={type:'main',idx:i};e.dataTransfer.effectAllowed='move';}}>
+            <span className="drag-handle">⠿⠿</span>
+            <span className="folder-emoji">{f.icon}</span>
+            <div style={{flex:1}}>
+              <div className="folder-name">{f.name}</div>
+              <div className="folder-meta">
+                <span className="badge">{f.count} files</span>
+                <span className="badge-sm">{f.structure.folders.length} subfolders</span>
+              </div>
+            </div>
+            <div className="folder-actions">
+              <span className="order-badge">#{i+1}</span>
+              <button className="btn-icon" onClick={e=>{e.stopPropagation();setExp(ex=>({...ex,[f.id]:!ex[f.id]}));}}>
+                {exp[f.id]?'▲':'▼'}
+              </button>
+            </div>
+          </div>
+          {exp[f.id]&&(
+            <div className="folder-tree">
+              {renderInnerTree(f.structure,i,null,0)}
+              {f.structure.folders.length===0&&f.structure.files.length===0&&
+                <div style={{color:'var(--text2)',fontSize:'.82rem',textAlign:'center',padding:'1rem'}}>No items</div>
+              }
+            </div>
+          )}
+        </div>
+      ))}
+      <div className="action-bar">
+        <button className="btn btn-secondary" onClick={load}>↺ Refresh</button>
+        <button className="btn btn-primary" onClick={deploy} disabled={!changed||saving}>
+          {saving?<><span className="spin"></span> Deploying…</>:'🚀 Deploy Changes'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============ FILE MANAGER ============ */
+function FilePage(){
+  const [cat,setCat]=useState(null);
+  const [tree,setTree]=useState(null);
+  const [treeLoading,setTreeLoading]=useState(false);
+  const [expanded,setExpanded]=useState({});
+  const [creating,setCreating]=useState(false);
+  const [renaming,setRenaming]=useState(null);
+  const [deleting,setDeleting]=useState(null);
+  const [viewing,setViewing]=useState(null);
+  const [fname,setFname]=useState('');
+  const [busy,setBusy]=useState(false);
+
+  const pickCat=async(c)=>{
+    setCat(c);setTreeLoading(true);setTree(null);
+    try{const s=await getTree(c.path);setTree(s);}
+    catch(e){toast.err('Load failed: '+e.message);}
+    finally{setTreeLoading(false);}
+  };
+  const viewFile=async(f)=>{
+    try{const d=await gGet(CR,f.path);setViewing({name:f.name,content:dec(d.content)});}
+    catch(e){toast.err(e.message);}
+  };
+  const createFile=async()=>{
+    if(!fname.trim())return;
+    const n=fname.trim().endsWith('.md')?fname.trim():fname.trim()+'.md';
+    setBusy(true);
+    try{
+      await gCreate(CR,cat.path+'/'+n,`---\ntitle: ${n.replace('.md','')}\n---\n\n`,'✨ Create '+n+' via Admin Dashboard');
+      toast.ok('Created '+n);setCreating(false);setFname('');const s=await getTree(cat.path);setTree(s);
+    }catch(e){toast.err(e.message);}finally{setBusy(false);}
+  };
+  const renameFile=async()=>{
+    const {f}=renaming;const nn=fname.trim();if(!nn)return;
+    const nf=nn.endsWith('.md')?nn:nn+'.md';
+    const np=f.path.replace(f.name,nf);
+    setBusy(true);
+    try{
+      const d=await gGet(CR,f.path);const c=dec(d.content);
+      await gCreate(CR,np,c,'✏️ Rename '+f.name+' → '+nf+' via Admin Dashboard');
+      await gDel(CR,f.path,d.sha,'🗑️ Remove old '+f.name+' (renamed)');
+      toast.ok('Renamed to '+nf);setRenaming(null);setFname('');const s=await getTree(cat.path);setTree(s);
+    }catch(e){toast.err(e.message);}finally{setBusy(false);}
+  };
+  const deleteFile=async()=>{
+    const {f}=deleting;setBusy(true);
+    try{
+      const d=await gGet(CR,f.path);
+      await gDel(CR,f.path,d.sha,'🗑️ Delete '+f.name+' via Admin Dashboard');
+      toast.ok('Deleted '+f.name);setDeleting(null);const s=await getTree(cat.path);setTree(s);
+    }catch(e){toast.err(e.message);}finally{setBusy(false);}
+  };
+
+  const renderTree=(s,depth=0)=>{
+    const items=[];
+    s.folders.forEach(sub=>{
+      const open=expanded[sub.path];
+      items.push(
+        <div key={sub.path}>
+          <div className="tree-item" style={{paddingLeft:`${depth*20}px`}}>
+            <div className="tree-folder-row" onClick={()=>setExpanded(e=>({...e,[sub.path]:!e[sub.path]}))}>
+              <span>{open?'📂':'📁'}</span><span>{sub.name}</span><span className="badge-sm" style={{marginLeft:'auto'}}>{countF(sub)}</span>
+            </div>
+          </div>
+          {open&&renderTree(sub,depth+1)}
+        </div>
+      );
+    });
+    s.files.forEach(f=>{
+      items.push(
+        <div key={f.path} className="tree-item" style={{paddingLeft:`${depth*20}px`}}>
+          <div className="tree-file-row">
+            <span className="tree-file-name" onClick={()=>viewFile(f)}>📄 {f.name.replace('.md','')}</span>
+            <div className="tree-file-btns">
+              <button className="btn-ico-sm" onClick={()=>{setRenaming({f});setFname(f.name.replace('.md',''));}} title="Rename">✏️</button>
+              <button className="btn-ico-sm btn-ico-danger" onClick={()=>setDeleting({f})} title="Delete">🗑️</button>
+            </div>
+          </div>
+        </div>
+      );
+    });
+    return items;
+  };
+
+  return(
+    <div className="content" style={{display:'flex',flexDirection:'column',gap:'1rem',height:'100%',paddingBottom:'1.5rem'}}>
+      <div className="fm-wrap" style={{flex:1,minHeight:0}}>
+        <div className="fm-sidebar">
+          <div className="fm-sidebar-title">Categories</div>
+          {CATS.map(c=>(
+            <button key={c.id} className={`fm-cat-btn ${cat?.id===c.id?'active':''}`} onClick={()=>pickCat(c)}>
+              <span>{c.icon}</span><span>{c.display}</span>
+            </button>
+          ))}
+        </div>
+        <div className="fm-main">
+          {!cat&&<div className="fm-empty"><div className="fm-empty-ico">📂</div><div>Select a category to browse files</div></div>}
+          {cat&&(
+            <>
+              <div className="fm-toolbar">
+                <div><span className="fm-title">{cat.icon} {cat.display}</span>{tree&&<span style={{color:'var(--text2)',fontSize:'.8rem'}}> · {countF(tree)} files</span>}</div>
+                <button className="btn btn-primary btn-sm" onClick={()=>{setCreating(true);setFname('');}}>+ New File</button>
+              </div>
+              <div className="file-tree">
+                {treeLoading&&[1,2,3,4].map(i=><div key={i} className="skel skel-row"></div>)}
+                {!treeLoading&&tree&&renderTree(tree)}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {creating&&<Modal title="Create New File" onClose={()=>setCreating(false)} footer={
+        <><button className="btn btn-secondary" onClick={()=>setCreating(false)}>Cancel</button>
+        <button className="btn btn-primary" onClick={createFile} disabled={busy||!fname}>{busy?<span className="spin"></span>:'✨ Create'}</button></>
+      }>
+        <div className="form-group">
+          <label>File name (inside {cat?.display})</label>
+          <input className="input" placeholder="e.g. Battle of Karbala" value={fname} onChange={e=>setFname(e.target.value)} onKeyDown={e=>e.key==='Enter'&&createFile()} autoFocus/>
+          <small>Saved as <code>{fname||'filename'}.md</code> with frontmatter template</small>
+        </div>
+      </Modal>}
+
+      {renaming&&<Modal title="Rename File" onClose={()=>setRenaming(null)} footer={
+        <><button className="btn btn-secondary" onClick={()=>setRenaming(null)}>Cancel</button>
+        <button className="btn btn-primary" onClick={renameFile} disabled={busy||!fname}>{busy?<span className="spin"></span>:'✏️ Rename'}</button></>
+      }>
+        <div className="form-group">
+          <label>New name for <code>{renaming.f.name}</code></label>
+          <input className="input" value={fname} onChange={e=>setFname(e.target.value)} onKeyDown={e=>e.key==='Enter'&&renameFile()} autoFocus/>
+        </div>
+      </Modal>}
+
+      {deleting&&<Modal title="Delete File" onClose={()=>setDeleting(null)} footer={
+        <><button className="btn btn-secondary" onClick={()=>setDeleting(null)}>Cancel</button>
+        <button className="btn btn-danger" onClick={deleteFile} disabled={busy}>{busy?<span className="spin"></span>:'🗑️ Delete Forever'}</button></>
+      }>
+        <div className="alert alert-error">⚠️ Are you sure you want to delete <strong>{deleting.f.name}</strong>? This cannot be undone.</div>
+      </Modal>}
+
+      {viewing&&<Modal title={viewing.name} onClose={()=>setViewing(null)} footer={
+        <button className="btn btn-secondary" onClick={()=>setViewing(null)}>Close</button>
+      }>
+        <pre className="file-preview">{viewing.content}</pre>
+      </Modal>}
+    </div>
+  );
+}
+
+/* ============ SETTINGS ============ */
+function SettingsPage(){
+  const [layout,setLayout]=useState('');
+  const [layoutSha,setLayoutSha]=useState('');
+  const [scss,setScss]=useState('');
+  const [scssSha,setScssSha]=useState('');
+  const [config,setConfig]=useState('');
+  const [configSha,setConfigSha]=useState('');
+  const [foldersFirst,setFoldersFirst]=useState(false);
+  const [toggles,setToggles]=useState({});
+  const [primary,setPrimary]=useState('#2d6a4f');
+  const [accent,setAccent]=useState('#d4af37');
+  const [loading,setLoading]=useState(true);
+  const [savingL,setSavingL]=useState(false);
+  const [savingT,setSavingT]=useState(false);
+  const [savingS,setSavingS]=useState(false);
+
+  useEffect(()=>{loadSettings();},[]);
+  const loadSettings=async()=>{
+    setLoading(true);
+    try{
+      const lf=await gGet(QR,'quartz.layout.ts');
+      const lc=dec(lf.content);setLayout(lc);setLayoutSha(lf.sha);
+      const togs={};
+      TOGGLES.forEach(t=>{
+        const commented=new RegExp(`//\\s*${t.comp.replace(/[()]/g,'\\$&')}`).test(lc);
+        const present=lc.includes(t.comp);
+        togs[t.key]=present&&!commented;
+      });
+      setToggles(togs);
+      try{
+        const sf=await gGet(QR,'quartz/styles/custom.scss');
+        const sc=dec(sf.content);setScss(sc);setScssSha(sf.sha);
+        const pm=sc.match(/--primary:\s*(#[0-9a-fA-F]{6})/);
+        const am=sc.match(/--accent:\s*(#[0-9a-fA-F]{6})/);
+        if(pm)setPrimary(pm[1]);if(am)setAccent(am[1]);
+      }catch(e){}
+      try{
+        const cf=await gGet(QR,'quartz.config.ts');
+        const cc=dec(cf.content);setConfig(cc);setConfigSha(cf.sha);
+        setFoldersFirst(cc.includes('aIsFolder'));
+      }catch(e){}
+    }catch(e){toast.err('Failed to load settings: '+e.message);}
+    finally{setLoading(false);}
+  };
+  const saveToggles=async()=>{
+    setSavingL(true);
+    try{
+      let nl=layout;
+      TOGGLES.forEach(t=>{
+        // Find the component, e.g. "Component.Explorer"
+        const idx = nl.indexOf(t.comp.replace('()',''));
+        if(idx===-1) return;
+        
+        // Find if that line is commented out
+        const lineStart = nl.lastIndexOf('\n', idx);
+        const isCommented = nl.slice(lineStart, idx).includes('//');
+        const shouldBeCommented = !toggles[t.key];
+        
+        if (isCommented === shouldBeCommented) return; // already in correct state
+
+        // Find the start and end of this component block
+        let blockStart = lineStart + 1;
+        let blockEnd = nl.indexOf('\n', idx);
+        
+        // If it's a function call with an object like Component.Explorer({...})
+        const braceIdx = nl.indexOf('{', idx);
+        if (braceIdx !== -1 && braceIdx < blockEnd) {
+          let depth = 0;
+          for(let i=braceIdx; i<nl.length; i++){
+            if(nl[i]==='{') depth++;
+            if(nl[i]==='}'){
+              depth--;
+              if(depth===0){
+                blockEnd = nl.indexOf('\n', i) !== -1 ? nl.indexOf('\n', i) : i + 1;
+                break;
+              }
+            }
+          }
+        }
+
+        const block = nl.substring(blockStart, blockEnd);
+        let newBlock;
+        if (shouldBeCommented) {
+          // Add // to every line in the block
+          newBlock = block.split('\n').map(l => '    // ' + l.trimStart()).join('\n');
+        } else {
+          // Remove // from every line in the block
+          newBlock = block.split('\n').map(l => l.replace(/^\s*\/\/\s*/, '    ')).join('\n');
+        }
+        nl = nl.substring(0, blockStart) + newBlock + nl.substring(blockEnd);
+      });
+      
+      await gPut(QR,'quartz.layout.ts',nl,layoutSha,'⚙️ Update feature toggles via Admin Dashboard');
+      setLayout(nl);toast.ok('Features saved! Quartz rebuilds shortly.');
+    }catch(e){toast.err('Save failed: '+e.message);}
+    finally{setSavingL(false);}
+  };
+
+  const saveTheme=async()=>{
+    setSavingT(true);
+    try{
+      const block=`:root {\n  --primary: ${primary};\n  --accent: ${accent};\n}\n`;
+      let ns=scss;
+      const rootRegex = /(:root\s*\{)([^}]*)(\})/s;
+      if (rootRegex.test(ns)) {
+        ns = ns.replace(rootRegex, (match, open, inner, close) => {
+          let newInner = inner;
+          if (newInner.includes('--primary:')) newInner = newInner.replace(/--primary:[^;]+;/, `--primary: ${primary};`);
+          else newInner += `  --primary: ${primary};\n`;
+          if (newInner.includes('--accent:')) newInner = newInner.replace(/--accent:[^;]+;/, `--accent: ${accent};`);
+          else newInner += `  --accent: ${accent};\n`;
+          return `${open}${newInner}${close}`;
+        });
+      } else {
+        ns = block + '\n' + ns;
+      }
+      
+      if(scssSha){await gPut(QR,'quartz/styles/custom.scss',ns,scssSha,'🎨 Update theme colors via Admin Dashboard');}
+      else{await gCreate(QR,'quartz/styles/custom.scss',ns,'🎨 Create custom theme via Admin Dashboard');}
+      setScss(ns);toast.ok('Theme saved! Site will rebuild with new colors.');
+    }catch(e){toast.err('Theme save failed: '+e.message);}
+    finally{setSavingT(false);}
+  };
+
+  if(loading)return <div className="content">{[1,2,3].map(i=><div key={i} className="skel skel-card" style={{height:'160px'}}></div>)}</div>;
+  return(
+    <div className="content">
+      <div className="settings-card">
+        <div className="settings-hdr">
+          <div><div className="settings-title">🎨 Theme Colors</div><div className="settings-sub">Updates <code>quartz/styles/custom.scss</code> in the quartz repo</div></div>
+          <button className="btn btn-primary btn-sm" onClick={saveTheme} disabled={savingT}>{savingT?<span className="spin"></span>:'Save Theme'}</button>
+        </div>
+        <div className="color-grid">
+          <div className="color-item">
+            <label>Primary Color</label>
+            <div className="color-row">
+              <input type="color" className="color-swatch" value={primary} onChange={e=>setPrimary(e.target.value)}/>
+              <input type="text" className="input input-sm" value={primary} onChange={e=>setPrimary(e.target.value)} style={{flex:1}}/>
+            </div>
+            <small>Used for links, buttons, headings</small>
+          </div>
+          <div className="color-item">
+            <label>Accent Color</label>
+            <div className="color-row">
+              <input type="color" className="color-swatch" value={accent} onChange={e=>setAccent(e.target.value)}/>
+              <input type="text" className="input input-sm" value={accent} onChange={e=>setAccent(e.target.value)} style={{flex:1}}/>
+            </div>
+            <small>Used for highlights and accents</small>
+          </div>
+          <div className="color-item">
+            <label>Preview</label>
+            <div className="color-preview" style={{background:`linear-gradient(135deg,${primary},${accent})`}}>
+              Safinat al-Najat
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-card">
+        <div className="settings-hdr">
+          <div><div className="settings-title">⚙️ Site Features</div><div className="settings-sub">Updates <code>quartz.layout.ts</code> in the quartz repo</div></div>
+          <button className="btn btn-primary btn-sm" onClick={saveToggles} disabled={savingL}>{savingL?<span className="spin"></span>:'Save Features'}</button>
+        </div>
+        <div className="toggles">
+          {TOGGLES.map(t=>(
+            <div key={t.key} className="toggle-row">
+              <span className="toggle-ico">{t.icon}</span>
+              <div className="toggle-info"><div className="toggle-lbl">{t.label}</div><div className="toggle-desc">{t.desc}</div></div>
+              <button className={`switch ${toggles[t.key]?'on':'off'}`} onClick={()=>setToggles(p=>({...p,[t.key]:!p[t.key]}))}>
+                <div className="switch-thumb"></div>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+
+
+      <div className="settings-card">
+        <div className="settings-title" style={{marginBottom:'1rem'}}>📦 Repository Info</div>
+        <div className="repo-grid">
+          <div className="repo-item"><div className="repo-lbl">Content Repository</div><div className="repo-val">{CR.owner}/{CR.name}</div><div className="repo-branch">Branch: {CR.branch}</div></div>
+          <div className="repo-item"><div className="repo-lbl">Quartz Repository</div><div className="repo-val">{QR.owner}/{QR.name}</div><div className="repo-branch">Branch: {QR.branch}</div></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ APP ROOT ============ */
+function App(){
+  const [authed,setAuthed]=useState(false);
+  const [page,setPage]=useState('folders');
+  const [dark,setDark]=useState(localStorage.getItem('dark_mode')!=='false');
+
+  useEffect(()=>{
+    document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+    localStorage.setItem('dark_mode',dark);
+  },[dark]);
+
+  useEffect(()=>{
+    const saved=localStorage.getItem('github_token');
+    if(saved){setTok(saved);setAuthed(true);}
+  },[]);
+
+  const handleAuth=(t)=>{setTok(t);setAuthed(true);};
+  const handleLogout=()=>{localStorage.removeItem('github_token');setTok('');setAuthed(false);};
+
+  if(!authed)return <><AuthPage onAuth={handleAuth}/><Toasts/></>;
+  const VIEWS={folders:FolderPage,files:FilePage,settings:SettingsPage};
+  const View=VIEWS[page];
+  return(
+    <div className="app">
+      <Sidebar page={page} setPage={setPage}/>
+      <div className="main">
+        <Header page={page} dark={dark} setDark={setDark} onLogout={handleLogout}/>
+        <View/>
+      </div>
+      <Toasts/>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
 </body>
 </html>
