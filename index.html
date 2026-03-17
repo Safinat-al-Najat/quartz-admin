@@ -1,954 +1,1922 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Safinat al-Najat — Admin</title>
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root,[data-theme=light]{--bg:#f0f4f0;--bg2:#ffffff;--bg3:#f5f7f5;--sidebar:#1b4332;--sidebar2:#163828;--stext:rgba(255,255,255,0.9);--sdim:rgba(255,255,255,0.5);--text:#111827;--text2:#6b7280;--border:#e5e7eb;--primary:#2d6a4f;--pl:#40916c;--accent:#d4af37;--danger:#dc2626;--warn-bg:#fef3c7;--warn-text:#92400e;--err-bg:#fee2e2;--err-text:#991b1b;--ok-bg:#d1fae5;--ok-text:#065f46;--sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);--shlg:0 10px 30px rgba(0,0,0,.12);--radius:12px}
-[data-theme=dark]{--bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--sidebar:#0d1117;--sidebar2:#010409;--stext:rgba(255,255,255,0.85);--sdim:rgba(255,255,255,0.4);--text:#e6edf3;--text2:#8b949e;--border:#30363d;--sh:0 1px 3px rgba(0,0,0,.3);--shlg:0 10px 30px rgba(0,0,0,.5);--warn-bg:#2a1f00;--warn-text:#f59e0b;--err-bg:#2a0f0f;--err-text:#f87171;--ok-bg:#0d2818;--ok-text:#34d399}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-.app{display:flex;height:100vh;overflow:hidden}
-/* SIDEBAR */
-.sidebar{width:260px;flex-shrink:0;background:var(--sidebar);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06)}
-.sb-brand{padding:1.5rem 1.25rem;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:.875rem}
-.sb-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),#b8941f);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:1.5rem;color:#1b4332;font-weight:700;flex-shrink:0}
-.sb-name{color:var(--stext);font-weight:600;font-size:.95rem;line-height:1.2}
-.sb-sub{color:var(--sdim);font-size:.72rem}
-.sb-nav{flex:1;padding:1rem .75rem;display:flex;flex-direction:column;gap:.25rem}
-.nav-btn{width:100%;background:none;border:none;border-radius:10px;padding:.75rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.875rem;transition:all .2s;text-align:left}
-.nav-btn:hover{background:rgba(255,255,255,.08)}
-.nav-btn.active{background:rgba(64,145,108,.25);outline:1.5px solid rgba(64,145,108,.4)}
-.nav-icon{font-size:1.25rem;width:28px;text-align:center;flex-shrink:0}
-.nav-lbl{color:var(--stext);font-size:.88rem;font-weight:500;display:block}
-.nav-desc{color:var(--sdim);font-size:.72rem;display:block}
-.sb-foot{padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,.08)}
-.connected-dot{display:flex;align-items:center;gap:.5rem;color:var(--sdim);font-size:.78rem}
-.dot{width:8px;height:8px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-/* MAIN */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.hdr{padding:1.25rem 2rem;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.hdr-left h1{font-size:1.25rem;font-weight:600}
-.hdr-left p{color:var(--text2);font-size:.82rem;margin-top:.1rem}
-.hdr-right{display:flex;align-items:center;gap:.75rem}
-.content{flex:1;overflow-y:auto;padding:2rem}
-/* BUTTONS */
-.btn{padding:.6rem 1.25rem;border:none;border-radius:8px;font-size:.875rem;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .15s;font-family:'Inter',sans-serif}
-.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--pl)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
-.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{opacity:.85}
-.btn-ghost{background:none;color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{background:var(--bg3)}
-.btn-sm{padding:.4rem .875rem;font-size:.8rem}
-.btn-icon{background:none;border:none;cursor:pointer;padding:.4rem;border-radius:6px;color:var(--text2);font-size:1rem;transition:all .15s}.btn-icon:hover{background:var(--bg3);color:var(--text)}
-.btn-ico-sm{background:none;border:none;cursor:pointer;padding:.2rem .35rem;border-radius:4px;font-size:.85rem;opacity:.6;transition:all .15s}.btn-ico-sm:hover{opacity:1;background:var(--bg3)}
-.btn-ico-danger:hover{background:var(--err-bg);color:var(--danger)}
-/* CARDS */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--sh);margin-bottom:1.25rem}
-/* ALERTS */
-.alert{padding:.875rem 1.125rem;border-radius:8px;font-size:.875rem;margin-bottom:1rem}
-.alert-warn{background:var(--warn-bg);color:var(--warn-text)}
-.alert-error{background:var(--err-bg);color:var(--err-text)}
-.alert-ok{background:var(--ok-bg);color:var(--ok-text)}
-/* INPUTS */
-.input{width:100%;padding:.6rem .875rem;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.875rem;font-family:'Inter',sans-serif;transition:border-color .15s;outline:none}
-.input:focus{border-color:var(--primary)}
-.input-sm{width:auto;padding:.35rem .6rem}
-.form-group{margin-bottom:1.125rem}
-.form-group label{display:block;font-size:.82rem;font-weight:500;color:var(--text2);margin-bottom:.4rem}
-.form-group small{display:block;font-size:.75rem;color:var(--text2);margin-top:.35rem}
-.form-group code{background:var(--bg3);padding:.1rem .35rem;border-radius:4px;font-size:.8rem}
-/* BADGE */
-.badge{background:var(--primary);color:#fff;padding:.15rem .55rem;border-radius:20px;font-size:.72rem;font-weight:600}
-.badge-sm{background:var(--bg3);color:var(--text2);padding:.1rem .4rem;border-radius:10px;font-size:.7rem;border:1px solid var(--border)}
-/* SPINNER */
-.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
-.spin-dark{border-color:rgba(0,0,0,.15);border-top-color:var(--primary)}
-@keyframes spin{to{transform:rotate(360deg)}}
-/* SKELETON */
-.skel{background:linear-gradient(90deg,var(--bg3) 25%,var(--border) 50%,var(--bg3) 75%);background-size:200% 100%;animation:skel 1.4s infinite;border-radius:8px}
-@keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.skel-card{height:80px;margin-bottom:1rem}
-.skel-row{height:44px;margin-bottom:.5rem}
-/* TOAST */
-.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.625rem;pointer-events:none}
-.toast{padding:.75rem 1.125rem;border-radius:10px;background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shlg);display:flex;align-items:center;gap:.625rem;font-size:.875rem;animation:slideIn .25s ease;pointer-events:auto;min-width:280px}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-/* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:8888;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:90%;max-width:480px;box-shadow:var(--shlg);animation:popIn .2s ease}
-@keyframes popIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
-.modal-hdr{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-hdr h3{font-size:1rem;font-weight:600}
-.modal-body{padding:1.5rem}
-.modal-foot{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.625rem}
-/* ACTION BAR */
-.action-bar{display:flex;gap:.75rem;padding-top:1rem;border-top:1px solid var(--border);margin-top:1rem}
-/* FOLDER ORGANIZER */
-.folder-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.875rem;transition:all .2s;cursor:grab}
-.folder-card:hover{box-shadow:var(--shlg);border-color:var(--primary)}
-.folder-card.drag-over{border-color:var(--accent);box-shadow:0 0 0 3px rgba(212,175,55,.2);transform:scale(1.01)}
-.folder-main{display:flex;align-items:center;gap:1rem;padding:1.125rem 1.25rem}
-.drag-handle{color:var(--text2);font-size:1.2rem;cursor:grab;user-select:none;letter-spacing:-2px}
-.folder-emoji{font-size:1.75rem;width:44px;text-align:center;flex-shrink:0}
-.folder-name{font-weight:600;font-size:.95rem}
-.folder-meta{display:flex;align-items:center;gap:.625rem;margin-top:.25rem}
-.folder-actions{display:flex;align-items:center;gap:.5rem;margin-left:auto}
-.order-badge{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:.2rem .5rem;border-radius:6px;font-size:.75rem;font-weight:600}
-.folder-tree{border-top:1px solid var(--border);padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.35rem}
-.tree-sub{display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;background:var(--bg3);border-radius:8px;font-size:.82rem}
-.tree-file-item{display:flex;align-items:center;gap:.5rem;padding:.35rem .75rem;border-radius:6px;font-size:.8rem;color:var(--text2)}
-.tree-file-item:hover{background:var(--bg3)}
-.tree-sub.drag-over,.tree-file-item.drag-over{border:2px dashed var(--accent);background:rgba(212,175,55,.08);transform:scale(1.01)}
-/* FILE MANAGER */
-.fm-wrap{display:flex;gap:0;height:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.fm-sidebar{width:200px;flex-shrink:0;border-right:1px solid var(--border);background:var(--bg3);padding:.875rem}
-.fm-sidebar-title{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);margin-bottom:.625rem;padding:0 .25rem}
-.fm-cat-btn{width:100%;display:flex;align-items:center;gap:.625rem;padding:.625rem .75rem;background:none;border:none;border-radius:8px;cursor:pointer;color:var(--text);font-size:.875rem;text-align:left;transition:all .15s}
-.fm-cat-btn:hover{background:var(--bg2)}
-.fm-cat-btn.active{background:rgba(45,106,79,.15);color:var(--primary);font-weight:500}
-.fm-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.fm-toolbar{display:flex;align-items:center;justify-content:space-between;padding:.875rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0}
-.fm-title{font-weight:600}
-.fm-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text2);gap:.75rem}
-.fm-empty-ico{font-size:3rem}
-.file-tree{flex:1;overflow-y:auto;padding:.75rem}
-.tree-item{display:flex;align-items:center;border-radius:8px;transition:background .15s}
-.tree-item:hover{background:var(--bg3)}
-.tree-folder-row{display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;cursor:pointer;flex:1;font-size:.875rem;font-weight:500}
-.tree-file-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem .75rem;flex:1}
-.tree-file-name{font-size:.82rem;cursor:pointer;color:var(--text);flex:1}
-.tree-file-name:hover{color:var(--primary)}
-.tree-file-btns{display:flex;gap:.25rem;opacity:0;transition:opacity .15s}
-.tree-item:hover .tree-file-btns{opacity:1}
-/* SETTINGS */
-.settings-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem}
-.settings-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
-.settings-title{font-size:1rem;font-weight:600}
-.settings-sub{color:var(--text2);font-size:.78rem;margin-top:.2rem}
-.color-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
-.color-item label{font-size:.82rem;font-weight:500;color:var(--text2);display:block;margin-bottom:.5rem}
-.color-row{display:flex;align-items:center;gap:.625rem}
-.color-swatch{width:40px;height:38px;padding:2px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:none}
-.color-preview{height:70px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:600;color:#fff}
-.toggles{display:flex;flex-direction:column;gap:0}
-.toggle-row{display:flex;align-items:center;gap:1rem;padding:.875rem 0;border-bottom:1px solid var(--border)}
-.toggle-row:last-child{border-bottom:none}
-.toggle-ico{font-size:1.25rem;width:32px;text-align:center}
-.toggle-info{flex:1}
-.toggle-lbl{font-size:.875rem;font-weight:500}
-.toggle-desc{font-size:.78rem;color:var(--text2)}
-.switch{width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:all .2s;position:relative;flex-shrink:0}
-.switch.on{background:var(--primary)}.switch.off{background:var(--border)}
-.switch-thumb{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;transition:left .2s}
-.switch.on .switch-thumb{left:23px}.switch.off .switch-thumb{left:3px}
-.repo-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.repo-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem}
-.repo-lbl{font-size:.75rem;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem}
-.repo-val{font-weight:600;font-size:.88rem}
-.repo-branch{font-size:.78rem;color:var(--primary);margin-top:.2rem}
-/* AUTH */
-.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:2rem}
-.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2.5rem;width:100%;max-width:440px;box-shadow:var(--shlg)}
-.auth-top{text-align:center;margin-bottom:2rem}
-.auth-arabic{font-family:'Amiri',serif;font-size:1.75rem;color:var(--primary);display:block;margin-bottom:.75rem}
-.auth-card h2{font-size:1.4rem;margin-bottom:.4rem}
-.auth-card p{color:var(--text2);font-size:.875rem}
-.btn-full{width:100%;justify-content:center}
-.auth-hints{margin-top:1.25rem;background:var(--bg3);border-radius:8px;padding:1rem;font-size:.78rem;color:var(--text2)}
-.auth-hints strong{display:block;margin-bottom:.4rem;color:var(--text)}
-.auth-hints ol{margin-left:1.25rem}
-.auth-hints li{margin-bottom:.2rem}
-.auth-hints code{background:var(--border);padding:.05rem .3rem;border-radius:3px}
-/* FILE PREVIEW */
-.file-preview{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;font-size:.8rem;font-family:monospace;white-space:pre-wrap;max-height:400px;overflow-y:auto;color:var(--text)}
-</style>
-</head>
-<body>
-<div id="root"></div>
-<script type="text/babel">
-const {useState,useEffect,useRef} = React;
-const GAPI = 'https://api.github.com';
-const CR = {owner:'Safinat-al-Najat',name:'safinat-al-najat.github.io',branch:'main'};
-const QR = {owner:'Safinat-al-Najat',name:'quartz',branch:'v4'};
-const CATS = [
-  {id:'merits',name:'MERITS',icon:'🌟',path:'MERITS',slug:'MERITS',display:'Merits',desc:'Virtues of the Ahlulbayt & companions'},
-  {id:'history',name:'MAJOR HISTORICAL EVENTS',icon:'📜',path:'MAJOR HISTORICAL EVENTS',slug:'MAJOR%20HISTORICAL%20EVENTS',display:'History',desc:'Key events in Islamic history'},
-  {id:'rulings',name:'RULINGS OF ISLAM',icon:'⚖️',path:'RULINGS OF ISLAM',slug:'RULINGS%20OF%20ISLAM',display:'Rulings',desc:'Fiqh, obligations & Islamic law'},
-];
-const TOGGLES = [
-  {key:'Explorer',label:'Explorer Sidebar',icon:'🗂️',desc:'Folder tree sidebar navigation',comp:'Component.Explorer()'},
-  {key:'RecentNotes',label:'Recent Notes',icon:'🕐',desc:'Recently updated notes widget',comp:'Component.RecentNotes'},
-  {key:'Backlinks',label:'Backlinks',icon:'🔗',desc:'Pages linking to current page',comp:'Component.Backlinks()'},
-  {key:'TableOfContents',label:'Table of Contents',icon:'📋',desc:'Auto-generated content outline',comp:'Component.TableOfContents()'},
-  {key:'Breadcrumbs',label:'Breadcrumbs',icon:'🍞',desc:'Navigation path indicator',comp:'Component.Breadcrumbs()'},
-];
-let _tok='';
-const setTok=(t)=>{_tok=t;};
-const enc=(s)=>btoa(unescape(encodeURIComponent(s)));
-const dec=(b)=>decodeURIComponent(escape(atob(b.replace(/\n/g,''))));
-
-/* SECURE TOKEN DECRYPTION */
-// The token is encrypted with AES-GCM using the password as the key.
-// To change the token, generate a new encrypted payload and replace these values:
-const ENCRYPTED_TOKEN = "C2LuIMoWkHFX4i0XzsJzPbpCp7B0jLBQ4hSZOZmxRDX66rQBfaEh3v8XnEK6F0U7Qam/+xv3y1E="; 
-const SALT = "salty_safinat";
-const IV = new Uint8Array([11, 22, 33, 44, 55, 66, 77, 88, 99, 10, 11, 12]);
-
-async function decryptToken(password) {
-  try {
-    const enc = new TextEncoder();
-    const keyMaterial = await crypto.subtle.importKey(
-      "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]
-    );
-    const key = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt: enc.encode(SALT), iterations: 100000, hash: "SHA-256" },
-      keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
-    );
-    
-    // Convert base64 string to Uint8Array
-    const binary = atob(ENCRYPTED_TOKEN);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    
-    const decryptedOutput = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: IV }, key, bytes
-    );
-    return new TextDecoder().decode(decryptedOutput);
-  } catch (e) {
-    throw new Error("Incorrect password");
-  }
-}
-
-const epath=(r,p)=>`/repos/${r.owner}/${r.name}/contents/${encodeURIComponent(p).replace(/%2F/g,'/')}`;
-async function gh(ep,opts={}){
-  const r=await fetch(GAPI+ep,{...opts,headers:{'Authorization':`Bearer ${_tok}`,'Content-Type':'application/json',...(opts.headers||{})}});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||`HTTP ${r.status}`);}
-  return r.json();
-}
-const gGet=(r,p)=>gh(epath(r,p)+`?ref=${r.branch}`);
-const gPut=(r,p,content,sha,msg)=>gh(epath(r,p),{method:'PUT',body:JSON.stringify({message:msg,content:enc(content),sha,branch:r.branch})});
-const gCreate=(r,p,content,msg)=>gh(epath(r,p),{method:'PUT',body:JSON.stringify({message:msg,content:enc(content),branch:r.branch})});
-const gDel=(r,p,sha,msg)=>gh(epath(r,p),{method:'DELETE',body:JSON.stringify({message:msg,sha,branch:r.branch})});
-const gList=(r,p)=>gh(epath(r,p)+`?ref=${r.branch}`);
-const extractWeight=(content)=>{
-  if(!content) return 999;
-  const match = content.match(/weight:\s*(\d+)/);
-  return match ? parseInt(match[1], 10) : 999;
-};
-
-async function getTree(p,repo=CR){
-  const data=await gList(repo,p);
-  const filesList=data.filter(i=>i.type==='file'&&i.name.endsWith('.md')&&i.name!=='index.md');
-  const dirsList=data.filter(i=>i.type==='dir');
-  
-  // Fetch files and their weights
-  const files = await Promise.all(filesList.map(async f => {
-    let weight = 999;
-    try {
-      const fileRes = await gGet(repo, f.path);
-      weight = extractWeight(dec(fileRes.content));
-    } catch(e) {}
-    return { name: f.name, path: f.path, sha: f.sha, type: 'file', weight };
-  }));
-
-  // Fetch folders and their tree + weights
-  const folders = await Promise.all(dirsList.map(async d => {
-    let weight = 999;
-    try {
-      // Check for index.md to get folder weight
-      const idxRes = await gGet(repo, `${d.path}/index.md`);
-      weight = extractWeight(dec(idxRes.content));
-    } catch(e) {}
-    return { name: d.name, path: d.path, type: 'dir', weight, ...await getTree(d.path, repo) };
-  }));
-
-  // Sort by weight, then alphabetically as fallback
-  const sorter = (a, b) => {
-    if (a.weight !== b.weight) return a.weight - b.weight;
-    return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
-  };
-  
-  files.sort(sorter);
-  folders.sort(sorter);
-
-  return { files, folders };
-}
-const countF=(s)=>s.files.length+s.folders.reduce((a,f)=>a+countF(f),0);
-
-/* TOAST */
-let _toast=null;
-const toast={ok:(m)=>_toast?.('ok',m),err:(m)=>_toast?.('err',m),info:(m)=>_toast?.('info',m)};
-function Toasts(){
-  const [list,setList]=useState([]);
-  useEffect(()=>{
-    _toast=(type,text)=>{const id=Date.now();setList(p=>[...p,{id,type,text}]);setTimeout(()=>setList(p=>p.filter(t=>t.id!==id)),4000);};
-    return()=>{_toast=null;};
-  },[]);
-  const ico={ok:'✅',err:'❌',info:'ℹ️'};
-  return <div className="toast-wrap">{list.map(t=><div key={t.id} className="toast"><span>{ico[t.type]}</span><span>{t.text}</span></div>)}</div>;
-}
-
-/* MODAL */
-function Modal({title,children,onClose,footer}){
-  return(
-    <div className="overlay" onClick={onClose}>
-      <div className="modal" onClick={e=>e.stopPropagation()}>
-        <div className="modal-hdr"><h3>{title}</h3><button className="btn-icon" onClick={onClose}>✕</button></div>
-        <div className="modal-body">{children}</div>
-        {footer&&<div className="modal-foot">{footer}</div>}
-      </div>
-    </div>
-  );
-}
-
-/* SIDEBAR */
-const PAGES=[
-  {id:'folders',icon:'⠿',label:'Folder Organizer',desc:'Reorder homepage sections'},
-  {id:'settings',icon:'⚙️',label:'Settings',desc:'Site configuration'},
-];
-function Sidebar({page,setPage}){
-  return(
-    <div className="sidebar">
-      <div className="sb-brand">
-        <div className="sb-icon">س</div>
-        <div><div className="sb-name">Safinat al-Najat</div><div className="sb-sub">Admin Dashboard</div></div>
-      </div>
-      <nav className="sb-nav">
-        {PAGES.map(p=>(
-          <button key={p.id} className={`nav-btn ${page===p.id?'active':''}`} onClick={()=>setPage(p.id)}>
-            <span className="nav-icon">{p.icon}</span>
-            <span><span className="nav-lbl">{p.label}</span><span className="nav-desc">{p.desc}</span></span>
-          </button>
-        ))}
-      </nav>
-      <div className="sb-foot"><div className="connected-dot"><div className="dot"></div><span>Connected to GitHub</span></div></div>
-    </div>
-  );
-}
-
-/* HEADER */
-function Header({page,dark,setDark,onLogout}){
-  const info={
-    folders:{t:'Folder Organizer',s:'Drag to reorder homepage sections'},
-    settings:{t:'Settings',s:'Configure site features'},
-  };
-  const {t,s}=info[page]||info.folders;
-  return(
-    <div className="hdr">
-      <div className="hdr-left"><h1>{t}</h1><p>{s}</p></div>
-      <div className="hdr-right">
-        <button className="btn-icon" onClick={()=>setDark(d=>!d)} title="Toggle dark mode">{dark?'☀️':'🌙'}</button>
-        <button className="btn btn-ghost btn-sm" onClick={onLogout}>🔑 Change Token</button>
-      </div>
-    </div>
-  );
-}
-
-/* ============ AUTH PAGE ============ */
-function AuthPage({onAuth}){
-  const [pwd,setPwd]=useState('');
-  const [loading,setLoading]=useState(false);
-  const [err,setErr]=useState('');
-  
-  // Setup mode states
-  const needsSetup = ENCRYPTED_TOKEN.includes('replace this');
-  const [setupTok, setSetupTok] = useState('');
-  const [setupPwd, setSetupPwd] = useState('');
-  const [generatedCode, setGeneratedCode] = useState('');
-
-  const submit=async()=>{
-    if(!pwd.trim())return;
-    setLoading(true);setErr('');
-    try{
-      const token = await decryptToken(pwd);
-      setTok(token);
-      // Verify token actually works
-      const r=await fetch(`${GAPI}/repos/${CR.owner}/${CR.name}`,{headers:{'Authorization':`Bearer ${token}`}});
-      if(!r.ok)throw new Error('Could not access repository. Admin password might be wrong or token expired.');
-      localStorage.setItem('admin_pwd',pwd); // Store password
-      onAuth(token);
-    }catch(e){setPwd('');setErr(e.message);}
-    finally{setLoading(false);}
-  };
-  
-  const generateEncryptedToken=async()=>{
-    if(!setupTok||!setupPwd)return;
-    setLoading(true);
-    try{
-      const enc = new TextEncoder();
-      const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(setupPwd), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]);
-      const key = await crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: enc.encode(SALT), iterations: 100000, hash: "SHA-256" },
-        keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
-      );
-      const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: IV }, key, enc.encode(setupTok));
-      
-      const bytes = new Uint8Array(encrypted);
-      let binary = '';
-      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-      const base64 = btoa(binary);
-      setGeneratedCode(`const ENCRYPTED_TOKEN = "${base64}";`);
-    }catch(e){setErr('Encryption failed: '+e.message);}
-    finally{setLoading(false);}
-  };
-
-  // Auto-login if password was saved
-  useEffect(() => {
-    if (!needsSetup) {
-      const saved = localStorage.getItem('admin_pwd');
-      if (saved) { setPwd(saved); setTimeout(submit, 100); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safinat al-Najat — Admin</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root,
+    [data-theme=light] {
+      --bg: #f0f4f0;
+      --bg2: #ffffff;
+      --bg3: #f5f7f5;
+      --sidebar: #1b4332;
+      --sidebar2: #163828;
+      --stext: rgba(255, 255, 255, 0.9);
+      --sdim: rgba(255, 255, 255, 0.5);
+      --text: #111827;
+      --text2: #6b7280;
+      --border: #e5e7eb;
+      --primary: #2d6a4f;
+      --pl: #40916c;
+      --accent: #d4af37;
+      --danger: #dc2626;
+      --warn-bg: #fef3c7;
+      --warn-text: #92400e;
+      --err-bg: #fee2e2;
+      --err-text: #991b1b;
+      --ok-bg: #d1fae5;
+      --ok-text: #065f46;
+      --sh: 0 1px 3px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .04);
+      --shlg: 0 10px 30px rgba(0, 0, 0, .12);
+      --radius: 12px
     }
-  }, [needsSetup]);
 
-  if (needsSetup) {
-    return (
-      <div className="auth-page">
-        <div className="auth-card" style={{maxWidth:'550px'}}>
-          <div className="auth-top">
-            <h2>Initial Security Setup</h2>
-            <p>Convert your GitHub token into a secure, password-protected format.</p>
-          </div>
-          {err&&<div className="alert alert-error">{err}</div>}
-          
-          {!generatedCode ? (
-            <>
-              <div className="form-group">
-                <label>Your GitHub Token (ghp_...)</label>
-                <input className="input" type="password" value={setupTok} onChange={e=>setSetupTok(e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label>Create an Admin Password</label>
-                <input className="input" type="password" value={setupPwd} onChange={e=>setSetupPwd(e.target.value)} />
-                <small>You will use this password to log in instead of the token.</small>
-              </div>
-              <button className="btn btn-primary btn-full" onClick={generateEncryptedToken} disabled={loading||!setupTok||!setupPwd}>
-                {loading?<span className="spin"></span>:'🔒'} Encrypt Token
-              </button>
-            </>
-          ) : (
-            <div className="auth-hints" style={{marginTop:0}}>
-              <strong style={{color:'var(--ok-text)',fontSize:'1rem'}}>✅ Success! Complete setup:</strong>
-              <p style={{marginBottom:'1rem'}}>Copy the code below, open <code>index.html</code> in your editor, and replace line 200 with this code, then commit to GitHub.</p>
-              <pre style={{background:'var(--bg)',padding:'1rem',borderRadius:'6px',overflowX:'auto',border:'1px solid var(--border)',userSelect:'all',fontFamily:'monospace',fontSize:'.85rem',color:'var(--accent)'}}>{generatedCode}</pre>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+    [data-theme=dark] {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --sidebar: #0d1117;
+      --sidebar2: #010409;
+      --stext: rgba(255, 255, 255, 0.85);
+      --sdim: rgba(255, 255, 255, 0.4);
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --border: #30363d;
+      --sh: 0 1px 3px rgba(0, 0, 0, .3);
+      --shlg: 0 10px 30px rgba(0, 0, 0, .5);
+      --warn-bg: #2a1f00;
+      --warn-text: #f59e0b;
+      --err-bg: #2a0f0f;
+      --err-text: #f87171;
+      --ok-bg: #0d2818;
+      --ok-text: #34d399
+    }
 
-  return(
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-top">
-          <span className="auth-arabic">بِسْمِ اللّٰهِ</span>
-          <h2>Safinat al-Najat Admin</h2>
-          <p>Enter the admin password to access the dashboard</p>
-        </div>
-        {err&&<div className="alert alert-error">{err}</div>}
-        <div className="form-group">
-          <label>Admin Password</label>
-          <input className="input" type="password" placeholder="••••••••" value={pwd} onChange={e=>setPwd(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()} autoFocus/>
-        </div>
-        <button className="btn btn-primary btn-full" onClick={submit} disabled={loading||!pwd}>
-          {loading?<span className="spin"></span>:'→'} Login
-        </button>
-      </div>
-    </div>
-  );
-}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
 
-/* ============ FOLDER ORGANIZER ============ */
-function FolderPage(){
-  const [folders,setFolders]=useState([]);
-  const [loading,setLoading]=useState(true);
-  const [saving,setSaving]=useState(false);
-  const [changed,setChanged]=useState(false);
-  const [exp,setExp]=useState({});
-  const [dragOver,setDragOver]=useState(null);
-  const [innerDragOver,setInnerDragOver]=useState(null);
-  const [dirtyDirs,setDirtyDirs]=useState(new Set());
-  const dragCtx=useRef(null);
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6
+    }
 
-  useEffect(()=>{load();},[]);
-  const load=async()=>{
-    setLoading(true);setDirtyDirs(new Set());setChanged(false);
-    try{
-      const rootData=await gList(CR,'');
-      const rootDirs=rootData.filter(i=>i.type==='dir'&&!i.name.startsWith('.')&&i.name!=='quartz'&&i.name.toLowerCase()!=='pngs'&&i.name.toLowerCase()!=='png');
-      
-      let indexContent='';
-      try{const f=await gGet(CR,'index.md');indexContent=dec(f.content);}catch(e){}
+    .app {
+      display: flex;
+      height: 100vh;
+      overflow: hidden
+    }
 
-      const extractSection=(path)=>{
-        const searchSlugs=[path,encodeURIComponent(path),path.replace(/ /g,'%20')];
-        for(let s of searchSlugs){
-          const escapedSlug=s.replace(/[-\/\\^$*+?.()|[\]{}]/g,'\\$&');
-          const re=new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[\\s\\S]*?(?=\\n## |\\nFor any queries|$)`);
-          const m=indexContent.match(re);
-          if(m)return m[0].trim();
-        }
-        return '';
+    /* SIDEBAR */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--sidebar);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 255, 255, .06)
+    }
+
+    .sb-brand {
+      padding: 1.5rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      display: flex;
+      align-items: center;
+      gap: .875rem
+    }
+
+    .sb-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent), #b8941f);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Amiri', serif;
+      font-size: 1.5rem;
+      color: #1b4332;
+      font-weight: 700;
+      flex-shrink: 0
+    }
+
+    .sb-name {
+      color: var(--stext);
+      font-weight: 600;
+      font-size: .95rem;
+      line-height: 1.2
+    }
+
+    .sb-sub {
+      color: var(--sdim);
+      font-size: .72rem
+    }
+
+    .sb-nav {
+      flex: 1;
+      padding: 1rem .75rem;
+      display: flex;
+      flex-direction: column;
+      gap: .25rem
+    }
+
+    .nav-btn {
+      width: 100%;
+      background: none;
+      border: none;
+      border-radius: 10px;
+      padding: .75rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: .875rem;
+      transition: all .2s;
+      text-align: left
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, .08)
+    }
+
+    .nav-btn.active {
+      background: rgba(64, 145, 108, .25);
+      outline: 1.5px solid rgba(64, 145, 108, .4)
+    }
+
+    .nav-icon {
+      font-size: 1.25rem;
+      width: 28px;
+      text-align: center;
+      flex-shrink: 0
+    }
+
+    .nav-lbl {
+      color: var(--stext);
+      font-size: .88rem;
+      font-weight: 500;
+      display: block
+    }
+
+    .nav-desc {
+      color: var(--sdim);
+      font-size: .72rem;
+      display: block
+    }
+
+    .sb-foot {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, .08)
+    }
+
+    .connected-dot {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      color: var(--sdim);
+      font-size: .78rem
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+      animation: pulse 2s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .5
+      }
+    }
+
+    /* MAIN */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    .hdr {
+      padding: 1.25rem 2rem;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0
+    }
+
+    .hdr-left h1 {
+      font-size: 1.25rem;
+      font-weight: 600
+    }
+
+    .hdr-left p {
+      color: var(--text2);
+      font-size: .82rem;
+      margin-top: .1rem
+    }
+
+    .hdr-right {
+      display: flex;
+      align-items: center;
+      gap: .75rem
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem
+    }
+
+    /* BUTTONS */
+    .btn {
+      padding: .6rem 1.25rem;
+      border: none;
+      border-radius: 8px;
+      font-size: .875rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      transition: all .15s;
+      font-family: 'Inter', sans-serif
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff
+    }
+
+    .btn-primary:hover {
+      background: var(--pl)
+    }
+
+    .btn-primary:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    .btn-secondary {
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border)
+    }
+
+    .btn-secondary:hover {
+      background: var(--border)
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff
+    }
+
+    .btn-danger:hover {
+      opacity: .85
+    }
+
+    .btn-ghost {
+      background: none;
+      color: var(--text2);
+      border: 1px solid var(--border)
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg3)
+    }
+
+    .btn-sm {
+      padding: .4rem .875rem;
+      font-size: .8rem
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: .4rem;
+      border-radius: 6px;
+      color: var(--text2);
+      font-size: 1rem;
+      transition: all .15s
+    }
+
+    .btn-icon:hover {
+      background: var(--bg3);
+      color: var(--text)
+    }
+
+    .btn-ico-sm {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: .2rem .35rem;
+      border-radius: 4px;
+      font-size: .85rem;
+      opacity: .6;
+      transition: all .15s
+    }
+
+    .btn-ico-sm:hover {
+      opacity: 1;
+      background: var(--bg3)
+    }
+
+    .btn-ico-danger:hover {
+      background: var(--err-bg);
+      color: var(--danger)
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--sh);
+      margin-bottom: 1.25rem
+    }
+
+    /* ALERTS */
+    .alert {
+      padding: .875rem 1.125rem;
+      border-radius: 8px;
+      font-size: .875rem;
+      margin-bottom: 1rem
+    }
+
+    .alert-warn {
+      background: var(--warn-bg);
+      color: var(--warn-text)
+    }
+
+    .alert-error {
+      background: var(--err-bg);
+      color: var(--err-text)
+    }
+
+    .alert-ok {
+      background: var(--ok-bg);
+      color: var(--ok-text)
+    }
+
+    /* INPUTS */
+    .input {
+      width: 100%;
+      padding: .6rem .875rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .875rem;
+      font-family: 'Inter', sans-serif;
+      transition: border-color .15s;
+      outline: none
+    }
+
+    .input:focus {
+      border-color: var(--primary)
+    }
+
+    .input-sm {
+      width: auto;
+      padding: .35rem .6rem
+    }
+
+    .form-group {
+      margin-bottom: 1.125rem
+    }
+
+    .form-group label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--text2);
+      margin-bottom: .4rem
+    }
+
+    .form-group small {
+      display: block;
+      font-size: .75rem;
+      color: var(--text2);
+      margin-top: .35rem
+    }
+
+    .form-group code {
+      background: var(--bg3);
+      padding: .1rem .35rem;
+      border-radius: 4px;
+      font-size: .8rem
+    }
+
+    /* BADGE */
+    .badge {
+      background: var(--primary);
+      color: #fff;
+      padding: .15rem .55rem;
+      border-radius: 20px;
+      font-size: .72rem;
+      font-weight: 600
+    }
+
+    .badge-sm {
+      background: var(--bg3);
+      color: var(--text2);
+      padding: .1rem .4rem;
+      border-radius: 10px;
+      font-size: .7rem;
+      border: 1px solid var(--border)
+    }
+
+    /* SPINNER */
+    .spin {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, .3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle
+    }
+
+    .spin-dark {
+      border-color: rgba(0, 0, 0, .15);
+      border-top-color: var(--primary)
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* SKELETON */
+    .skel {
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--border) 50%, var(--bg3) 75%);
+      background-size: 200% 100%;
+      animation: skel 1.4s infinite;
+      border-radius: 8px
+    }
+
+    @keyframes skel {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
+    .skel-card {
+      height: 80px;
+      margin-bottom: 1rem
+    }
+
+    .skel-row {
+      height: 44px;
+      margin-bottom: .5rem
+    }
+
+    /* TOAST */
+    .toast-wrap {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: .625rem;
+      pointer-events: none
+    }
+
+    .toast {
+      padding: .75rem 1.125rem;
+      border-radius: 10px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      box-shadow: var(--shlg);
+      display: flex;
+      align-items: center;
+      gap: .625rem;
+      font-size: .875rem;
+      animation: slideIn .25s ease;
+      pointer-events: auto;
+      min-width: 280px
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1
+      }
+    }
+
+    /* MODAL */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      z-index: 8888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px)
+    }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: var(--shlg);
+      animation: popIn .2s ease
+    }
+
+    @keyframes popIn {
+      from {
+        transform: scale(.95);
+        opacity: 0
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+
+    .modal-hdr {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .modal-hdr h3 {
+      font-size: 1rem;
+      font-weight: 600
+    }
+
+    .modal-body {
+      padding: 1.5rem
+    }
+
+    .modal-foot {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: .625rem
+    }
+
+    /* ACTION BAR */
+    .action-bar {
+      display: flex;
+      gap: .75rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      margin-top: 1rem
+    }
+
+    /* FOLDER ORGANIZER */
+    .folder-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: .875rem;
+      transition: all .2s;
+      cursor: grab
+    }
+
+    .folder-card:hover {
+      box-shadow: var(--shlg);
+      border-color: var(--primary)
+    }
+
+    .folder-card.drag-over {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, .2);
+      transform: scale(1.01)
+    }
+
+    .folder-main {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.125rem 1.25rem
+    }
+
+    .drag-handle {
+      color: var(--text2);
+      font-size: 1.2rem;
+      cursor: grab;
+      user-select: none;
+      letter-spacing: -2px
+    }
+
+    .folder-emoji {
+      font-size: 1.75rem;
+      width: 44px;
+      text-align: center;
+      flex-shrink: 0
+    }
+
+    .folder-name {
+      font-weight: 600;
+      font-size: .95rem
+    }
+
+    .folder-meta {
+      display: flex;
+      align-items: center;
+      gap: .625rem;
+      margin-top: .25rem
+    }
+
+    .folder-actions {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin-left: auto
+    }
+
+    .order-badge {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: .2rem .5rem;
+      border-radius: 6px;
+      font-size: .75rem;
+      font-weight: 600
+    }
+
+    .folder-tree {
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: .35rem
+    }
+
+    .tree-sub {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .5rem .75rem;
+      background: var(--bg3);
+      border-radius: 8px;
+      font-size: .82rem
+    }
+
+    .tree-file-item {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .35rem .75rem;
+      border-radius: 6px;
+      font-size: .8rem;
+      color: var(--text2)
+    }
+
+    .tree-file-item:hover {
+      background: var(--bg3)
+    }
+
+    .tree-sub.drag-over,
+    .tree-file-item.drag-over {
+      border: 2px dashed var(--accent);
+      background: rgba(212, 175, 55, .08);
+      transform: scale(1.01)
+    }
+
+    /* FILE MANAGER */
+    .fm-wrap {
+      display: flex;
+      gap: 0;
+      height: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden
+    }
+
+    .fm-sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      background: var(--bg3);
+      padding: .875rem
+    }
+
+    .fm-sidebar-title {
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--text2);
+      margin-bottom: .625rem;
+      padding: 0 .25rem
+    }
+
+    .fm-cat-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: .625rem;
+      padding: .625rem .75rem;
+      background: none;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: .875rem;
+      text-align: left;
+      transition: all .15s
+    }
+
+    .fm-cat-btn:hover {
+      background: var(--bg2)
+    }
+
+    .fm-cat-btn.active {
+      background: rgba(45, 106, 79, .15);
+      color: var(--primary);
+      font-weight: 500
+    }
+
+    .fm-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    .fm-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .875rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .fm-title {
+      font-weight: 600
+    }
+
+    .fm-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text2);
+      gap: .75rem
+    }
+
+    .fm-empty-ico {
+      font-size: 3rem
+    }
+
+    .file-tree {
+      flex: 1;
+      overflow-y: auto;
+      padding: .75rem
+    }
+
+    .tree-item {
+      display: flex;
+      align-items: center;
+      border-radius: 8px;
+      transition: background .15s
+    }
+
+    .tree-item:hover {
+      background: var(--bg3)
+    }
+
+    .tree-folder-row {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .5rem .75rem;
+      cursor: pointer;
+      flex: 1;
+      font-size: .875rem;
+      font-weight: 500
+    }
+
+    .tree-file-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .4rem .75rem;
+      flex: 1
+    }
+
+    .tree-file-name {
+      font-size: .82rem;
+      cursor: pointer;
+      color: var(--text);
+      flex: 1
+    }
+
+    .tree-file-name:hover {
+      color: var(--primary)
+    }
+
+    .tree-file-btns {
+      display: flex;
+      gap: .25rem;
+      opacity: 0;
+      transition: opacity .15s
+    }
+
+    .tree-item:hover .tree-file-btns {
+      opacity: 1
+    }
+
+    /* SETTINGS */
+    .settings-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem
+    }
+
+    .settings-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem
+    }
+
+    .settings-title {
+      font-size: 1rem;
+      font-weight: 600
+    }
+
+    .settings-sub {
+      color: var(--text2);
+      font-size: .78rem;
+      margin-top: .2rem
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.25rem
+    }
+
+    .color-item label {
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--text2);
+      display: block;
+      margin-bottom: .5rem
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: .625rem
+    }
+
+    .color-swatch {
+      width: 40px;
+      height: 38px;
+      padding: 2px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      background: none
+    }
+
+    .color-preview {
+      height: 70px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .875rem;
+      font-weight: 600;
+      color: #fff
+    }
+
+    .toggles {
+      display: flex;
+      flex-direction: column;
+      gap: 0
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: .875rem 0;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .toggle-row:last-child {
+      border-bottom: none
+    }
+
+    .toggle-ico {
+      font-size: 1.25rem;
+      width: 32px;
+      text-align: center
+    }
+
+    .toggle-info {
+      flex: 1
+    }
+
+    .toggle-lbl {
+      font-size: .875rem;
+      font-weight: 500
+    }
+
+    .toggle-desc {
+      font-size: .78rem;
+      color: var(--text2)
+    }
+
+    .switch {
+      width: 44px;
+      height: 24px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all .2s;
+      position: relative;
+      flex-shrink: 0
+    }
+
+    .switch.on {
+      background: var(--primary)
+    }
+
+    .switch.off {
+      background: var(--border)
+    }
+
+    .switch-thumb {
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      transition: left .2s
+    }
+
+    .switch.on .switch-thumb {
+      left: 23px
+    }
+
+    .switch.off .switch-thumb {
+      left: 3px
+    }
+
+    .repo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem
+    }
+
+    .repo-item {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem
+    }
+
+    .repo-lbl {
+      font-size: .75rem;
+      color: var(--text2);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: .35rem
+    }
+
+    .repo-val {
+      font-weight: 600;
+      font-size: .88rem
+    }
+
+    .repo-branch {
+      font-size: .78rem;
+      color: var(--primary);
+      margin-top: .2rem
+    }
+
+    /* AUTH */
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      padding: 2rem
+    }
+
+    .auth-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shlg)
+    }
+
+    .auth-top {
+      text-align: center;
+      margin-bottom: 2rem
+    }
+
+    .auth-arabic {
+      font-family: 'Amiri', serif;
+      font-size: 1.75rem;
+      color: var(--primary);
+      display: block;
+      margin-bottom: .75rem
+    }
+
+    .auth-card h2 {
+      font-size: 1.4rem;
+      margin-bottom: .4rem
+    }
+
+    .auth-card p {
+      color: var(--text2);
+      font-size: .875rem
+    }
+
+    .btn-full {
+      width: 100%;
+      justify-content: center
+    }
+
+    .auth-hints {
+      margin-top: 1.25rem;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: .78rem;
+      color: var(--text2)
+    }
+
+    .auth-hints strong {
+      display: block;
+      margin-bottom: .4rem;
+      color: var(--text)
+    }
+
+    .auth-hints ol {
+      margin-left: 1.25rem
+    }
+
+    .auth-hints li {
+      margin-bottom: .2rem
+    }
+
+    .auth-hints code {
+      background: var(--border);
+      padding: .05rem .3rem;
+      border-radius: 3px
+    }
+
+    /* FILE PREVIEW */
+    .file-preview {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: .8rem;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+      color: var(--text)
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    const GAPI = 'https://api.github.com';
+    const CR = { owner: 'Safinat-al-Najat', name: 'safinat-al-najat.github.io', branch: 'main' };
+    const QR = { owner: 'Safinat-al-Najat', name: 'quartz', branch: 'v4' };
+    const CATS = [
+      { id: 'merits', name: 'MERITS', icon: '🌟', path: 'MERITS', slug: 'MERITS', display: 'Merits', desc: 'Virtues of the Ahlulbayt & companions' },
+      { id: 'history', name: 'MAJOR HISTORICAL EVENTS', icon: '📜', path: 'MAJOR HISTORICAL EVENTS', slug: 'MAJOR%20HISTORICAL%20EVENTS', display: 'History', desc: 'Key events in Islamic history' },
+      { id: 'rulings', name: 'RULINGS OF ISLAM', icon: '⚖️', path: 'RULINGS OF ISLAM', slug: 'RULINGS%20OF%20ISLAM', display: 'Rulings', desc: 'Fiqh, obligations & Islamic law' },
+    ];
+    const TOGGLES = [
+      { key: 'Explorer', label: 'Explorer Sidebar', icon: '🗂️', desc: 'Folder tree sidebar navigation', comp: 'Component.Explorer()' },
+      { key: 'RecentNotes', label: 'Recent Notes', icon: '🕐', desc: 'Recently updated notes widget', comp: 'Component.RecentNotes' },
+      { key: 'Backlinks', label: 'Backlinks', icon: '🔗', desc: 'Pages linking to current page', comp: 'Component.Backlinks()' },
+      { key: 'TableOfContents', label: 'Table of Contents', icon: '📋', desc: 'Auto-generated content outline', comp: 'Component.TableOfContents()' },
+      { key: 'Breadcrumbs', label: 'Breadcrumbs', icon: '🍞', desc: 'Navigation path indicator', comp: 'Component.Breadcrumbs()' },
+    ];
+    let _tok = '';
+    const setTok = (t) => { _tok = t; };
+    const enc = (s) => btoa(unescape(encodeURIComponent(s)));
+    const dec = (b) => decodeURIComponent(escape(atob(b.replace(/\n/g, ''))));
+
+    /* SECURE TOKEN DECRYPTION */
+    // The token is encrypted with AES-GCM using the password as the key.
+    // To change the token, generate a new encrypted payload and replace these values:
+    const ENCRYPTED_TOKEN = "C2LuIMoWkHFX4i0XzsJzPbpCp7B0jLBQ4hSZOZmxRDX66rQBfaEh3v8XnEK6F0U7Qam/+xv3y1E=";
+    const SALT = "salty_safinat";
+    const IV = new Uint8Array([11, 22, 33, 44, 55, 66, 77, 88, 99, 10, 11, 12]);
+
+    async function decryptToken(password) {
+      try {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+          "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]
+        );
+        const key = await crypto.subtle.deriveKey(
+          { name: "PBKDF2", salt: enc.encode(SALT), iterations: 100000, hash: "SHA-256" },
+          keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+        );
+
+        // Convert base64 string to Uint8Array
+        const binary = atob(ENCRYPTED_TOKEN);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+        const decryptedOutput = await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv: IV }, key, bytes
+        );
+        return new TextDecoder().decode(decryptedOutput);
+      } catch (e) {
+        throw new Error("Incorrect password");
+      }
+    }
+
+    const epath = (r, p) => `/repos/${r.owner}/${r.name}/contents/${encodeURIComponent(p).replace(/%2F/g, '/')}`;
+    async function gh(ep, opts = {}) {
+      const r = await fetch(GAPI + ep, { ...opts, headers: { 'Authorization': `Bearer ${_tok}`, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
+      return r.json();
+    }
+    const gGet = (r, p) => gh(epath(r, p) + `?ref=${r.branch}`);
+    const gPut = (r, p, content, sha, msg) => gh(epath(r, p), { method: 'PUT', body: JSON.stringify({ message: msg, content: enc(content), sha, branch: r.branch }) });
+    const gCreate = (r, p, content, msg) => gh(epath(r, p), { method: 'PUT', body: JSON.stringify({ message: msg, content: enc(content), branch: r.branch }) });
+    const gDel = (r, p, sha, msg) => gh(epath(r, p), { method: 'DELETE', body: JSON.stringify({ message: msg, sha, branch: r.branch }) });
+    const gList = (r, p) => gh(epath(r, p) + `?ref=${r.branch}`);
+    const extractWeight = (content) => {
+      if (!content) return 999;
+      const match = content.match(/weight:\s*(\d+)/);
+      return match ? parseInt(match[1], 10) : 999;
+    };
+
+    async function getTree(p, repo = CR) {
+      const data = await gList(repo, p);
+      const filesList = data.filter(i => i.type === 'file' && i.name.endsWith('.md') && i.name !== 'index.md');
+      const dirsList = data.filter(i => i.type === 'dir');
+
+      // Fetch files and their weights
+      const files = await Promise.all(filesList.map(async f => {
+        let weight = 999;
+        try {
+          const fileRes = await gGet(repo, f.path);
+          weight = extractWeight(dec(fileRes.content));
+        } catch (e) { }
+        return { name: f.name, path: f.path, sha: f.sha, type: 'file', weight };
+      }));
+
+      // Fetch folders and their tree + weights
+      const folders = await Promise.all(dirsList.map(async d => {
+        let weight = 999;
+        try {
+          // Check for index.md to get folder weight
+          const idxRes = await gGet(repo, `${d.path}/index.md`);
+          weight = extractWeight(dec(idxRes.content));
+        } catch (e) { }
+        return { name: d.name, path: d.path, type: 'dir', weight, ...await getTree(d.path, repo) };
+      }));
+
+      // Sort by weight, then alphabetically as fallback
+      const sorter = (a, b) => {
+        if (a.weight !== b.weight) return a.weight - b.weight;
+        return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
       };
 
-      const all=await Promise.all(rootDirs.map(async (d)=>{
-        let block=extractSection(d.path);
-        let icon='📁',display=d.name,desc='Folder from repository';
-        if(block){
-          const mdDesc = block.split('\n').slice(1).join('\n').trim();
-          const m2=block.match(/## \\[\s*([^\]]+)\s*\]/);
-          if (m2) {
-            const parts=m2[1].split(' ');
-            if(parts.length>1){icon=parts[0];display=parts.slice(1).join(' ');}
-            else{icon='';display=parts[0];}
-          }
-        }
+      files.sort(sorter);
+      folders.sort(sorter);
 
-        const existingCat=CATS.find(c=>c.path===d.path);
-        const catData={
-          id: existingCat?.id || d.name.toLowerCase().replace(/\s+/g,'-'),
-          name: d.name.toUpperCase(),
-          icon: block ? icon : (existingCat?.icon || '📁'),
-          path: d.path,
-          slug: encodeURIComponent(d.name),
-          display: block ? display : (existingCat?.display || d.name),
-          desc: block ? desc : (existingCat?.desc || desc),
-          rawBlock: block
-        };
-        try{
-          const s=await getTree(catData.path);
-          return{...catData,count:countF(s),structure:s};
-        }catch(e){
-          return{...catData,count:0,structure:{files:[],folders:[]}};
-        }
-      }));
-      setFolders(all);
-    }catch(e){toast.err('Load failed: '+e.message);}
-    finally{setLoading(false);}
-  };
-
-  /* deep-clone structure helper */
-  const cloneStructure=(s)=>({files:[...s.files],folders:s.folders.map(f=>({...f,...cloneStructure(f)}))});
-
-  /* reorder items within a structure node identified by parentPath */
-  const reorderInStructure=(structure,parentPath,fromIdx,toIdx)=>{
-    const s=cloneStructure(structure);
-    const doReorder=(node,target)=>{
-      if(target===null){
-        /* reorder at this level */
-        const combined=[...node.folders,...node.files];
-        const [moved]=combined.splice(fromIdx,1);
-        combined.splice(toIdx,0,moved);
-        node.folders=combined.filter(i=>i.type==='dir');
-        node.files=combined.filter(i=>i.type==='file');
-        return true;
-      }
-      for(let sub of node.folders){
-        if(sub.path===target){
-          const combined=[...sub.folders,...sub.files];
-          const [moved]=combined.splice(fromIdx,1);
-          combined.splice(toIdx,0,moved);
-          sub.folders=combined.filter(i=>i.type==='dir');
-          sub.files=combined.filter(i=>i.type==='file');
-          return true;
-        }
-        if(doReorder(sub,target))return true;
-      }
-      return false;
-    };
-    doReorder(s,parentPath);
-    return s;
-  };
-
-  /* main folder drop */
-  const onMainDrop=(e,ti)=>{
-    e.preventDefault();e.stopPropagation();
-    if(!dragCtx.current||dragCtx.current.type!=='main'){setDragOver(null);return;}
-    const si=dragCtx.current.idx;
-    if(si===ti){setDragOver(null);dragCtx.current=null;return;}
-    const f=[...folders];const [m]=f.splice(si,1);f.splice(ti,0,m);
-    setFolders(f);setChanged(true);setDragOver(null);dragCtx.current=null;
-  };
-
-  /* inner item drop (subfolders + files within a main folder) */
-  const onInnerDrop=(e,folderIdx,parentPath,toIdx)=>{
-    e.preventDefault();e.stopPropagation();
-    if(!dragCtx.current||dragCtx.current.type!=='inner'){setInnerDragOver(null);dragCtx.current=null;return;}
-    const{folderIdx:srcFI,parentPath:srcPP,idx:fromIdx}=dragCtx.current;
-    if(srcFI!==folderIdx||srcPP!==parentPath||fromIdx===toIdx){setInnerDragOver(null);dragCtx.current=null;return;}
-    const f=[...folders];
-    f[folderIdx]={...f[folderIdx],structure:reorderInStructure(f[folderIdx].structure,parentPath,fromIdx,toIdx),count:f[folderIdx].count};
-    setFolders(f);setChanged(true);
-    setDirtyDirs(new Set([...dirtyDirs, parentPath||f[folderIdx].path]));
-    setInnerDragOver(null);dragCtx.current=null;
-  };
-
-  const processWeightUpdates=async()=>{
-    const tasks=[];
-    const search=(node,path)=>{
-      if(path===null)return node;
-      for(let sub of node.folders){
-        if(sub.path===path)return sub;
-        const res=search(sub,path);
-        if(res)return res;
-      }
-      return null;
-    };
-    Array.from(dirtyDirs).forEach(dirPath=>{
-      const top=folders.find(f=>dirPath.startsWith(f.path));
-      if(!top)return;
-      const tNode=dirPath===top.path?top.structure:search(top.structure,dirPath);
-      if(!tNode)return;
-      const combined=[...tNode.folders,...tNode.files];
-      combined.forEach((item,idx)=>{
-        tasks.push({item,weight:idx+1});
-      });
-    });
-    if(tasks.length===0)return;
-
-    const setWeight=(content,w)=>{
-      const lines=content.replace(/\r/g,'').split('\n');
-      if(lines[0]==='---'){
-        let e=-1;let wi=-1;
-        for(let i=1;i<lines.length;i++){
-          if(lines[i].startsWith('weight:'))wi=i;
-          if(lines[i]==='---'){e=i;break;}
-        }
-        if(e!==-1){
-          if(wi!==-1)lines[wi]=`weight: ${w}`;
-          else lines.splice(e,0,`weight: ${w}`);
-          return lines.join('\n');
-        }
-      }
-      return `---\nweight: ${w}\n---\n${content}`;
-    };
-
-    let err=0;
-    toast.info(`Creating a single bulk commit for ${tasks.length} items...`);
-    
-    try {
-      // 1. Get current branch ref to get latest commit SHA
-      const ref = await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`);
-      const latestCommitSha = ref.object.sha;
-      
-      // 2. Get the commit to get its tree SHA
-      const commit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits/${latestCommitSha}`);
-      const baseTreeSha = commit.tree.sha;
-
-      // 3. Prepare the new tree array
-      const tree = [];
-      for(const {item,weight} of tasks){
-        const fPath=item.type==='dir'?`${item.path}/index.md`:item.path;
-        let nContent=`---\ntitle: ${item.name}\nweight: ${weight}\n---\n`;
-        try{
-          const fileRes=await gGet(CR,fPath).catch(()=>null);
-          if(fileRes&&fileRes.content){
-            nContent=setWeight(dec(fileRes.content),weight);
-          }
-          tree.push({
-            path: fPath,
-            mode: '100644',
-            type: 'blob',
-            content: nContent
-          });
-        }catch(e){err++;console.error(e);}
-      }
-
-      if (tree.length > 0) {
-        // 4. Create new tree
-        const newTree = await gh(`/repos/${CR.owner}/${CR.name}/git/trees`, {
-          method: 'POST',
-          body: JSON.stringify({ base_tree: baseTreeSha, tree })
-        });
-
-        // 5. Create new commit
-        const newCommit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits`, {
-          method: 'POST',
-          body: JSON.stringify({
-            message: `🗂️ Bulk update folder/file weights via Admin Dashboard`,
-            tree: newTree.sha,
-            parents: [latestCommitSha]
-          })
-        });
-
-        // 6. Update reference
-        await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ sha: newCommit.sha, force: false })
-        });
-      }
-    } catch(e) {
-      toast.err('Bulk commit failed: ' + e.message);
-      err++;
+      return { files, folders };
     }
-    
-    if(err>0)toast.err(`Failed to update some files.`);
-  };
+    const countF = (s) => s.files.length + s.folders.reduce((a, f) => a + countF(f), 0);
 
-  const deploy=async()=>{
-    setSaving(true);
-    toast.info('Starting deployment... do not close the page.');
-    try{
-      const file=await gGet(CR,'index.md');
-      const cur=dec(file.content);
-      const sec=folders.map(f=>{
-        if(f.rawBlock) return f.rawBlock;
-        return `## [${f.icon} ${f.display}](${f.slug})\n${f.desc}`;
-      }).join('\n\n');
-      const lines=cur.split('\n');
-      const vi=lines.findIndex(l=>l.includes('Surah Al-Imran'));
-      const ci=lines.findIndex(l=>l.includes('For any queries'));
-      if(vi<0||ci<0)throw new Error('Cannot find section markers in index.md');
-      const newC=[...lines.slice(0,vi+1),'',sec,'',...lines.slice(ci)].join('\n');
-      await gPut(CR,'index.md',newC,file.sha,'📝 Update folder order via Admin Dashboard');
-      
-      // Update weights for dirty subfolders
-      await processWeightUpdates();
-      
-      toast.ok('Deployed successfully! Site rebuilds in ~2 min.');
-      setChanged(false);setDirtyDirs(new Set());
-    }catch(e){toast.err('Deploy failed: '+e.message);}
-    finally{setSaving(false);}
-  };
+    /* TOAST */
+    let _toast = null;
+    const toast = { ok: (m) => _toast?.('ok', m), err: (m) => _toast?.('err', m), info: (m) => _toast?.('info', m) };
+    function Toasts() {
+      const [list, setList] = useState([]);
+      useEffect(() => {
+        _toast = (type, text) => { const id = Date.now(); setList(p => [...p, { id, type, text }]); setTimeout(() => setList(p => p.filter(t => t.id !== id)), 4000); };
+        return () => { _toast = null; };
+      }, []);
+      const ico = { ok: '✅', err: '❌', info: 'ℹ️' };
+      return <div className="toast-wrap">{list.map(t => <div key={t.id} className="toast"><span>{ico[t.type]}</span><span>{t.text}</span></div>)}</div>;
+    }
 
-  /* Recursive tree renderer with drag & drop at every level */
-  const renderInnerTree=(structure,folderIdx,parentPath,depth=0)=>{
-    const combined=[...structure.folders,...structure.files];
-    return combined.map((item,idx)=>{
-      const isDir=item.type==='dir';
-      const dragKey=`${parentPath||'root'}::${idx}`;
-      const isOver=innerDragOver===dragKey;
-      return(
-        <div key={item.path}>
-          <div
-            className={`${isDir?'tree-sub':'tree-file-item'} ${isOver?'drag-over':''}`}
-            style={{marginLeft:`${depth*16}px`,cursor:'grab',transition:'all .15s'}}
-            draggable
-            onDragStart={e=>{e.stopPropagation();dragCtx.current={type:'inner',folderIdx,parentPath,idx};e.dataTransfer.effectAllowed='move';}}
-            onDragOver={e=>{e.preventDefault();e.stopPropagation();setInnerDragOver(dragKey);}}
-            onDragLeave={e=>{e.stopPropagation();if(innerDragOver===dragKey)setInnerDragOver(null);}}
-            onDrop={e=>onInnerDrop(e,folderIdx,parentPath,idx)}
-          >
-            {isDir?(
-              <>
-                <span style={{cursor:'pointer',display:'flex',alignItems:'center',gap:'.5rem',flex:1}} onClick={()=>setExp(e=>({...e,[item.path]:!e[item.path]}))}>
-                  {exp[item.path]?'📂':'📁'} {item.name}
-                </span>
-                <span className="badge-sm">{countF(item)}</span>
-                <span style={{fontSize:'.7rem',marginLeft:'.5rem',color:'var(--text2)'}}>{exp[item.path]?'▲':'▼'}</span>
-              </>
-            ):(
-              <><span style={{display:'flex',alignItems:'center',gap:'.5rem',flex:1}}>📄 {item.name.replace('.md','')}</span><span className="drag-handle" style={{fontSize:'.8rem'}}>⠿</span></>
-            )}
+    /* MODAL */
+    function Modal({ title, children, onClose, footer }) {
+      return (
+        <div className="overlay" onClick={onClose}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-hdr"><h3>{title}</h3><button className="btn-icon" onClick={onClose}>✕</button></div>
+            <div className="modal-body">{children}</div>
+            {footer && <div className="modal-foot">{footer}</div>}
           </div>
-          {isDir&&exp[item.path]&&renderInnerTree(item,folderIdx,item.path,depth+1)}
         </div>
       );
-    });
-  };
+    }
 
-  if(loading)return <div className="content">{[1,2,3].map(i=><div key={i} className="skel skel-card"></div>)}</div>;
-  return(
-    <div className="content">
-      {changed&&<div className="alert alert-warn">⚠️ Unsaved changes — click Deploy to publish.</div>}
-      {folders.map((f,i)=>(
-        <div key={f.id} className={`folder-card ${dragOver===i?'drag-over':''}`}
-          onDragOver={e=>{e.preventDefault();if(dragCtx.current?.type==='main')setDragOver(i);}}
-          onDragLeave={()=>setDragOver(null)}
-          onDrop={e=>onMainDrop(e,i)}>
-          <div className="folder-main" draggable
-            onDragStart={e=>{dragCtx.current={type:'main',idx:i};e.dataTransfer.effectAllowed='move';}}>
-            <span className="drag-handle">⠿⠿</span>
-            <span className="folder-emoji">{f.icon}</span>
-            <div style={{flex:1}}>
-              <div className="folder-name">{f.name}</div>
-              <div className="folder-meta">
-                <span className="badge">{f.count} files</span>
-                <span className="badge-sm">{f.structure.folders.length} subfolders</span>
-              </div>
-            </div>
-            <div className="folder-actions">
-              <span className="order-badge">#{i+1}</span>
-              <button className="btn-icon" onClick={e=>{e.stopPropagation();setExp(ex=>({...ex,[f.id]:!ex[f.id]}));}}>
-                {exp[f.id]?'▲':'▼'}
+    /* SIDEBAR */
+    const PAGES = [
+      { id: 'folders', icon: '⠿', label: 'Folder Organizer', desc: 'Reorder homepage sections' },
+      { id: 'settings', icon: '⚙️', label: 'Settings', desc: 'Site configuration' },
+    ];
+    function Sidebar({ page, setPage }) {
+      return (
+        <div className="sidebar">
+          <div className="sb-brand">
+            <div className="sb-icon">س</div>
+            <div><div className="sb-name">Safinat al-Najat</div><div className="sb-sub">Admin Dashboard</div></div>
+          </div>
+          <nav className="sb-nav">
+            {PAGES.map(p => (
+              <button key={p.id} className={`nav-btn ${page === p.id ? 'active' : ''}`} onClick={() => setPage(p.id)}>
+                <span className="nav-icon">{p.icon}</span>
+                <span><span className="nav-lbl">{p.label}</span><span className="nav-desc">{p.desc}</span></span>
               </button>
+            ))}
+          </nav>
+          <div className="sb-foot"><div className="connected-dot"><div className="dot"></div><span>Connected to GitHub</span></div></div>
+        </div>
+      );
+    }
+
+    /* HEADER */
+    function Header({ page, dark, setDark, onLogout }) {
+      const info = {
+        folders: { t: 'Folder Organizer', s: 'Drag to reorder homepage sections' },
+        settings: { t: 'Settings', s: 'Configure site features' },
+      };
+      const { t, s } = info[page] || info.folders;
+      return (
+        <div className="hdr">
+          <div className="hdr-left"><h1>{t}</h1><p>{s}</p></div>
+          <div className="hdr-right">
+            <button className="btn-icon" onClick={() => setDark(d => !d)} title="Toggle dark mode">{dark ? '☀️' : '🌙'}</button>
+            <button className="btn btn-ghost btn-sm" onClick={onLogout}>🔑 Change Token</button>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============ AUTH PAGE ============ */
+    function AuthPage({ onAuth }) {
+      const [pwd, setPwd] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [err, setErr] = useState('');
+
+      // Setup mode states
+      const needsSetup = ENCRYPTED_TOKEN.includes('replace this');
+      const [setupTok, setSetupTok] = useState('');
+      const [setupPwd, setSetupPwd] = useState('');
+      const [generatedCode, setGeneratedCode] = useState('');
+
+      const submit = async () => {
+        if (!pwd.trim()) return;
+        setLoading(true); setErr('');
+        try {
+          const token = await decryptToken(pwd);
+          setTok(token);
+          // Verify token actually works
+          const r = await fetch(`${GAPI}/repos/${CR.owner}/${CR.name}`, { headers: { 'Authorization': `Bearer ${token}` } });
+          if (!r.ok) throw new Error('Could not access repository. Admin password might be wrong or token expired.');
+          localStorage.setItem('admin_pwd', pwd); // Store password
+          onAuth(token);
+        } catch (e) { setPwd(''); setErr(e.message); }
+        finally { setLoading(false); }
+      };
+
+      const generateEncryptedToken = async () => {
+        if (!setupTok || !setupPwd) return;
+        setLoading(true);
+        try {
+          const enc = new TextEncoder();
+          const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(setupPwd), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]);
+          const key = await crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt: enc.encode(SALT), iterations: 100000, hash: "SHA-256" },
+            keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
+          );
+          const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: IV }, key, enc.encode(setupTok));
+
+          const bytes = new Uint8Array(encrypted);
+          let binary = '';
+          for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+          const base64 = btoa(binary);
+          setGeneratedCode(`const ENCRYPTED_TOKEN = "${base64}";`);
+        } catch (e) { setErr('Encryption failed: ' + e.message); }
+        finally { setLoading(false); }
+      };
+
+      // Auto-login if password was saved
+      useEffect(() => {
+        if (!needsSetup) {
+          const saved = localStorage.getItem('admin_pwd');
+          if (saved) { setPwd(saved); setTimeout(submit, 100); }
+        }
+      }, [needsSetup]);
+
+      if (needsSetup) {
+        return (
+          <div className="auth-page">
+            <div className="auth-card" style={{ maxWidth: '550px' }}>
+              <div className="auth-top">
+                <h2>Initial Security Setup</h2>
+                <p>Convert your GitHub token into a secure, password-protected format.</p>
+              </div>
+              {err && <div className="alert alert-error">{err}</div>}
+
+              {!generatedCode ? (
+                <>
+                  <div className="form-group">
+                    <label>Your GitHub Token (ghp_...)</label>
+                    <input className="input" type="password" value={setupTok} onChange={e => setSetupTok(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label>Create an Admin Password</label>
+                    <input className="input" type="password" value={setupPwd} onChange={e => setSetupPwd(e.target.value)} />
+                    <small>You will use this password to log in instead of the token.</small>
+                  </div>
+                  <button className="btn btn-primary btn-full" onClick={generateEncryptedToken} disabled={loading || !setupTok || !setupPwd}>
+                    {loading ? <span className="spin"></span> : '🔒'} Encrypt Token
+                  </button>
+                </>
+              ) : (
+                <div className="auth-hints" style={{ marginTop: 0 }}>
+                  <strong style={{ color: 'var(--ok-text)', fontSize: '1rem' }}>✅ Success! Complete setup:</strong>
+                  <p style={{ marginBottom: '1rem' }}>Copy the code below, open <code>index.html</code> in your editor, and replace line 200 with this code, then commit to GitHub.</p>
+                  <pre style={{ background: 'var(--bg)', padding: '1rem', borderRadius: '6px', overflowX: 'auto', border: '1px solid var(--border)', userSelect: 'all', fontFamily: 'monospace', fontSize: '.85rem', color: 'var(--accent)' }}>{generatedCode}</pre>
+                </div>
+              )}
             </div>
           </div>
-          {exp[f.id]&&(
-            <div className="folder-tree">
-              {renderInnerTree(f.structure,i,null,0)}
-              {f.structure.folders.length===0&&f.structure.files.length===0&&
-                <div style={{color:'var(--text2)',fontSize:'.82rem',textAlign:'center',padding:'1rem'}}>No items</div>
-              }
+        );
+      }
+
+      return (
+        <div className="auth-page">
+          <div className="auth-card">
+            <div className="auth-top">
+              <span className="auth-arabic">بِسْمِ اللّٰهِ</span>
+              <h2>Safinat al-Najat Admin</h2>
+              <p>Enter the admin password to access the dashboard</p>
             </div>
-          )}
+            {err && <div className="alert alert-error">{err}</div>}
+            <div className="form-group">
+              <label>Admin Password</label>
+              <input className="input" type="password" placeholder="••••••••" value={pwd} onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} autoFocus />
+            </div>
+            <button className="btn btn-primary btn-full" onClick={submit} disabled={loading || !pwd}>
+              {loading ? <span className="spin"></span> : '→'} Login
+            </button>
+          </div>
         </div>
-      ))}
-      <div className="action-bar">
-        <button className="btn btn-secondary" onClick={load}>↺ Refresh</button>
-        <button className="btn btn-primary" onClick={deploy} disabled={!changed||saving}>
-          {saving?<><span className="spin"></span> Deploying…</>:'🚀 Deploy Changes'}
-        </button>
-      </div>
-    </div>
-  );
-}
+      );
+    }
 
-/* ============ FILE MANAGER ============ */
-function FilePage() { return null; }
-/* ============ SETTINGS ============ */
-function SettingsPage(){
-  const [layout,setLayout]=useState('');
-  const [layoutSha,setLayoutSha]=useState('');
-  const [config,setConfig]=useState('');
-  const [configSha,setConfigSha]=useState('');
-  const [foldersFirst,setFoldersFirst]=useState(false);
-  const [toggles,setToggles]=useState({});
-  const [loading,setLoading]=useState(true);
-  const [savingL,setSavingL]=useState(false);
+    /* ============ FOLDER ORGANIZER ============ */
+    function FolderPage() {
+      const [folders, setFolders] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [saving, setSaving] = useState(false);
+      const [changed, setChanged] = useState(false);
+      const [exp, setExp] = useState({});
+      const [dragOver, setDragOver] = useState(null);
+      const [innerDragOver, setInnerDragOver] = useState(null);
+      const [dirtyDirs, setDirtyDirs] = useState(new Set());
+      const dragCtx = useRef(null);
 
-  useEffect(()=>{loadSettings();},[]);
-  const loadSettings=async()=>{
-    setLoading(true);
-    try{
-      const lf=await gGet(QR,'quartz.layout.ts');
-      const lc=dec(lf.content);setLayout(lc);setLayoutSha(lf.sha);
-      const togs={};
-      TOGGLES.forEach(t=>{
-        const commented=new RegExp(`//\\s*\${t.comp.replace(/[()]/g,'\\$&')}`).test(lc);
-        const present=lc.includes(t.comp);
-        togs[t.key]=present&&!commented;
-      });
-      setToggles(togs);
-      try{
-        const cf=await gGet(QR,'quartz.config.ts');
-        const cc=dec(cf.content);setConfig(cc);setConfigSha(cf.sha);
-        setFoldersFirst(cc.includes('aIsFolder'));
-      }catch(e){}
-    }catch(e){toast.err('Failed to load settings: '+e.message);}
-    finally{setLoading(false);}
-  };
-  const saveToggles=async()=>{
-    setSavingL(true);
-    try{
-      let nl=layout;
-      TOGGLES.forEach(t=>{
-        const idx = nl.indexOf(t.comp.replace('()',''));
-        if(idx===-1) return;
-        const lineStart = nl.lastIndexOf('\n', idx);
-        const isCommented = nl.slice(lineStart, idx).includes('//');
-        const shouldBeCommented = !toggles[t.key];
-        if (isCommented === shouldBeCommented) return;
-        let blockStart = lineStart + 1;
-        let blockEnd = nl.indexOf('\n', idx);
-        const braceIdx = nl.indexOf('{', idx);
-        if (braceIdx !== -1 && braceIdx < blockEnd) {
-          let depth = 0;
-          for(let i=braceIdx; i<nl.length; i++){
-            if(nl[i]==='{') depth++;
-            if(nl[i]==='}'){
-              depth--;
-              if(depth===0){
-                blockEnd = nl.indexOf('\n', i) !== -1 ? nl.indexOf('\n', i) : i + 1;
-                break;
+      useEffect(() => { load(); }, []);
+      const load = async () => {
+        setLoading(true); setDirtyDirs(new Set()); setChanged(false);
+        try {
+          const rootData = await gList(CR, '');
+          const rootDirs = rootData.filter(i => i.type === 'dir' && !i.name.startsWith('.') && i.name !== 'quartz' && i.name.toLowerCase() !== 'pngs' && i.name.toLowerCase() !== 'png');
+
+          let indexContent = '';
+          try { const f = await gGet(CR, 'index.md'); indexContent = dec(f.content); } catch (e) { }
+
+          const extractSection = (path) => {
+            const searchSlugs = [path, encodeURIComponent(path), path.replace(/ /g, '%20')];
+            for (let s of searchSlugs) {
+              const escapedSlug = s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+              const re = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[\\s\\S]*?(?=\\n## |\\nFor any queries|$)`);
+              const m = indexContent.match(re);
+              if (m) return m[0].trim();
+            }
+            return '';
+          };
+
+          const all = await Promise.all(rootDirs.map(async (d) => {
+            let block = extractSection(d.path);
+            let icon = '📁', display = d.name, desc = '';
+            if (block) {
+              const mdDesc = block.split('\n').slice(1).join('\n').trim();
+              desc = mdDesc || desc; // Actually use the description you extracted
+
+              const m2 = block.match(/## \[\s*([^\]]+)\s*\]/); // Fixed: single backslash
+              if (m2) { // Fixed: Restored the missing 'if' statement
+                const parts = m2[1].split(' ');
+                if (parts.length > 1) { icon = parts[0]; display = parts.slice(1).join(' '); }
+                else { icon = ''; display = parts[0]; }
               }
             }
-          }
-        }
-        const block = nl.substring(blockStart, blockEnd);
-        let newBlock;
-        if (shouldBeCommented) {
-          newBlock = block.split('\n').map(l => '    // ' + l.trimStart()).join('\n');
-        } else {
-          newBlock = block.split('\n').map(l => l.replace(/^\s*\/\/\s*/, '    ')).join('\n');
-        }
-        nl = nl.substring(0, blockStart) + newBlock + nl.substring(blockEnd);
-      });
-      const res = await gPut(QR,'quartz.layout.ts',nl,layoutSha,'⚙️ Update feature toggles via Admin Dashboard');
-      setLayout(nl);setLayoutSha(res.content.sha);toast.ok('Features saved! Quartz rebuilds shortly.');
-    }catch(e){toast.err('Save failed: '+e.message);}
-    finally{setSavingL(false);}
-  };
 
-  if(loading)return <div className="content">{[1,2,3].map(i=><div key={i} className="skel skel-card" style={{height:'160px'}}></div>)}</div>;
-  return(
-    <div className="content">
-      <div className="settings-card">
-        <div className="settings-hdr">
-          <div><div className="settings-title">⚙️ Site Features</div><div className="settings-sub">Updates <code>quartz.layout.ts</code> in the quartz repo</div></div>
-          <button className="btn btn-primary btn-sm" onClick={saveToggles} disabled={savingL}>{savingL?<span className="spin"></span>:'Save Features'}</button>
-        </div>
-        <div className="toggles">
-          {TOGGLES.map(t=>(
-            <div key={t.key} className="toggle-row">
-              <span className="toggle-ico">{t.icon}</span>
-              <div className="toggle-info"><div className="toggle-lbl">{t.label}</div><div className="toggle-desc">{t.desc}</div></div>
-              <button className={`switch ${toggles[t.key]?'on':'off'}`} onClick={()=>setToggles(p=>({...p,[t.key]:!p[t.key]}))}>
-                <div className="switch-thumb"></div>
-              </button>
+            const existingCat = CATS.find(c => c.path === d.path);
+            const catData = {
+              id: existingCat?.id || d.name.toLowerCase().replace(/\s+/g, '-'),
+              name: d.name.toUpperCase(),
+              icon: block ? icon : (existingCat?.icon || '📁'),
+              path: d.path,
+              slug: encodeURIComponent(d.name),
+              display: block ? display : (existingCat?.display || d.name),
+              desc: block ? desc : (existingCat?.desc || desc),
+              rawBlock: block
+            };
+            try {
+              const s = await getTree(catData.path);
+              return { ...catData, count: countF(s), structure: s };
+            } catch (e) {
+              return { ...catData, count: 0, structure: { files: [], folders: [] } };
+            }
+          }));
+          setFolders(all);
+        } catch (e) { toast.err('Load failed: ' + e.message); }
+        finally { setLoading(false); }
+      };
+
+      /* deep-clone structure helper */
+      const cloneStructure = (s) => ({ files: [...s.files], folders: s.folders.map(f => ({ ...f, ...cloneStructure(f) })) });
+
+      /* reorder items within a structure node identified by parentPath */
+      const reorderInStructure = (structure, parentPath, fromIdx, toIdx) => {
+        const s = cloneStructure(structure);
+        const doReorder = (node, target) => {
+          if (target === null) {
+            /* reorder at this level */
+            const combined = [...node.folders, ...node.files];
+            const [moved] = combined.splice(fromIdx, 1);
+            combined.splice(toIdx, 0, moved);
+            node.folders = combined.filter(i => i.type === 'dir');
+            node.files = combined.filter(i => i.type === 'file');
+            return true;
+          }
+          for (let sub of node.folders) {
+            if (sub.path === target) {
+              const combined = [...sub.folders, ...sub.files];
+              const [moved] = combined.splice(fromIdx, 1);
+              combined.splice(toIdx, 0, moved);
+              sub.folders = combined.filter(i => i.type === 'dir');
+              sub.files = combined.filter(i => i.type === 'file');
+              return true;
+            }
+            if (doReorder(sub, target)) return true;
+          }
+          return false;
+        };
+        doReorder(s, parentPath);
+        return s;
+      };
+
+      /* main folder drop */
+      const onMainDrop = (e, ti) => {
+        e.preventDefault(); e.stopPropagation();
+        if (!dragCtx.current || dragCtx.current.type !== 'main') { setDragOver(null); return; }
+        const si = dragCtx.current.idx;
+        if (si === ti) { setDragOver(null); dragCtx.current = null; return; }
+        const f = [...folders]; const [m] = f.splice(si, 1); f.splice(ti, 0, m);
+        setFolders(f); setChanged(true); setDragOver(null); dragCtx.current = null;
+      };
+
+      /* inner item drop (subfolders + files within a main folder) */
+      const onInnerDrop = (e, folderIdx, parentPath, toIdx) => {
+        e.preventDefault(); e.stopPropagation();
+        if (!dragCtx.current || dragCtx.current.type !== 'inner') { setInnerDragOver(null); dragCtx.current = null; return; }
+        const { folderIdx: srcFI, parentPath: srcPP, idx: fromIdx } = dragCtx.current;
+        if (srcFI !== folderIdx || srcPP !== parentPath || fromIdx === toIdx) { setInnerDragOver(null); dragCtx.current = null; return; }
+        const f = [...folders];
+        f[folderIdx] = { ...f[folderIdx], structure: reorderInStructure(f[folderIdx].structure, parentPath, fromIdx, toIdx), count: f[folderIdx].count };
+        setFolders(f); setChanged(true);
+        setDirtyDirs(new Set([...dirtyDirs, parentPath || f[folderIdx].path]));
+        setInnerDragOver(null); dragCtx.current = null;
+      };
+
+      const processWeightUpdates = async () => {
+        const tasks = [];
+        const search = (node, path) => {
+          if (path === null) return node;
+          for (let sub of node.folders) {
+            if (sub.path === path) return sub;
+            const res = search(sub, path);
+            if (res) return res;
+          }
+          return null;
+        };
+        Array.from(dirtyDirs).forEach(dirPath => {
+          const top = folders.find(f => dirPath.startsWith(f.path));
+          if (!top) return;
+          const tNode = dirPath === top.path ? top.structure : search(top.structure, dirPath);
+          if (!tNode) return;
+          const combined = [...tNode.folders, ...tNode.files];
+          combined.forEach((item, idx) => {
+            tasks.push({ item, weight: idx + 1 });
+          });
+        });
+        if (tasks.length === 0) return;
+
+        const setWeight = (content, w) => {
+          const lines = content.replace(/\r/g, '').split('\n');
+          if (lines[0] === '---') {
+            let e = -1; let wi = -1;
+            for (let i = 1; i < lines.length; i++) {
+              if (lines[i].startsWith('weight:')) wi = i;
+              if (lines[i] === '---') { e = i; break; }
+            }
+            if (e !== -1) {
+              if (wi !== -1) lines[wi] = `weight: ${w}`;
+              else lines.splice(e, 0, `weight: ${w}`);
+              return lines.join('\n');
+            }
+          }
+          return `---\nweight: ${w}\n---\n${content}`;
+        };
+
+        let err = 0;
+        toast.info(`Creating a single bulk commit for ${tasks.length} items...`);
+
+        try {
+          // 1. Get current branch ref to get latest commit SHA
+          const ref = await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`);
+          const latestCommitSha = ref.object.sha;
+
+          // 2. Get the commit to get its tree SHA
+          const commit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits/${latestCommitSha}`);
+          const baseTreeSha = commit.tree.sha;
+
+          // 3. Prepare the new tree array
+          const tree = [];
+          for (const { item, weight } of tasks) {
+            const fPath = item.type === 'dir' ? `${item.path}/index.md` : item.path;
+            let nContent = `---\ntitle: ${item.name}\nweight: ${weight}\n---\n`;
+            try {
+              const fileRes = await gGet(CR, fPath).catch(() => null);
+              if (fileRes && fileRes.content) {
+                nContent = setWeight(dec(fileRes.content), weight);
+              }
+              tree.push({
+                path: fPath,
+                mode: '100644',
+                type: 'blob',
+                content: nContent
+              });
+            } catch (e) { err++; console.error(e); }
+          }
+
+          if (tree.length > 0) {
+            // 4. Create new tree
+            const newTree = await gh(`/repos/${CR.owner}/${CR.name}/git/trees`, {
+              method: 'POST',
+              body: JSON.stringify({ base_tree: baseTreeSha, tree })
+            });
+
+            // 5. Create new commit
+            const newCommit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits`, {
+              method: 'POST',
+              body: JSON.stringify({
+                message: `🗂️ Bulk update folder/file weights via Admin Dashboard`,
+                tree: newTree.sha,
+                parents: [latestCommitSha]
+              })
+            });
+
+            // 6. Update reference
+            await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ sha: newCommit.sha, force: false })
+            });
+          }
+        } catch (e) {
+          toast.err('Bulk commit failed: ' + e.message);
+          err++;
+        }
+
+        if (err > 0) toast.err(`Failed to update some files.`);
+      };
+
+      const deploy = async () => {
+        setSaving(true);
+        toast.info('Starting deployment... do not close the page.');
+        try {
+          const file = await gGet(CR, 'index.md');
+          const cur = dec(file.content);
+          const sec = folders.map(f => {
+            if (f.rawBlock) return f.rawBlock;
+            return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
+          }).join('\n\n');
+          const lines = cur.split('\n');
+          const vi = lines.findIndex(l => l.includes('Surah Al-Imran'));
+          const ci = lines.findIndex(l => l.includes('For any queries'));
+          if (vi < 0 || ci < 0) throw new Error('Cannot find section markers in index.md');
+          const newC = [...lines.slice(0, vi + 1), '', sec, '', ...lines.slice(ci)].join('\n');
+          await gPut(CR, 'index.md', newC, file.sha, '📝 Update folder order via Admin Dashboard');
+
+          // Update weights for dirty subfolders
+          await processWeightUpdates();
+
+          toast.ok('Deployed successfully! Site rebuilds in ~2 min.');
+          setChanged(false); setDirtyDirs(new Set());
+        } catch (e) { toast.err('Deploy failed: ' + e.message); }
+        finally { setSaving(false); }
+      };
+
+      /* Recursive tree renderer with drag & drop at every level */
+      const renderInnerTree = (structure, folderIdx, parentPath, depth = 0) => {
+        const combined = [...structure.folders, ...structure.files];
+        return combined.map((item, idx) => {
+          const isDir = item.type === 'dir';
+          const dragKey = `${parentPath || 'root'}::${idx}`;
+          const isOver = innerDragOver === dragKey;
+          return (
+            <div key={item.path}>
+              <div
+                className={`${isDir ? 'tree-sub' : 'tree-file-item'} ${isOver ? 'drag-over' : ''}`}
+                style={{ marginLeft: `${depth * 16}px`, cursor: 'grab', transition: 'all .15s' }}
+                draggable
+                onDragStart={e => { e.stopPropagation(); dragCtx.current = { type: 'inner', folderIdx, parentPath, idx }; e.dataTransfer.effectAllowed = 'move'; }}
+                onDragOver={e => { e.preventDefault(); e.stopPropagation(); setInnerDragOver(dragKey); }}
+                onDragLeave={e => { e.stopPropagation(); if (innerDragOver === dragKey) setInnerDragOver(null); }}
+                onDrop={e => onInnerDrop(e, folderIdx, parentPath, idx)}
+              >
+                {isDir ? (
+                  <>
+                    <span style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '.5rem', flex: 1 }} onClick={() => setExp(e => ({ ...e, [item.path]: !e[item.path] }))}>
+                      {exp[item.path] ? '📂' : '📁'} {item.name}
+                    </span>
+                    <span className="badge-sm">{countF(item)}</span>
+                    <span style={{ fontSize: '.7rem', marginLeft: '.5rem', color: 'var(--text2)' }}>{exp[item.path] ? '▲' : '▼'}</span>
+                  </>
+                ) : (
+                  <><span style={{ display: 'flex', alignItems: 'center', gap: '.5rem', flex: 1 }}>📄 {item.name.replace('.md', '')}</span><span className="drag-handle" style={{ fontSize: '.8rem' }}>⠿</span></>
+                )}
+              </div>
+              {isDir && exp[item.path] && renderInnerTree(item, folderIdx, item.path, depth + 1)}
+            </div>
+          );
+        });
+      };
+
+      if (loading) return <div className="content">{[1, 2, 3].map(i => <div key={i} className="skel skel-card"></div>)}</div>;
+      return (
+        <div className="content">
+          {changed && <div className="alert alert-warn">⚠️ Unsaved changes — click Deploy to publish.</div>}
+          {folders.map((f, i) => (
+            <div key={f.id} className={`folder-card ${dragOver === i ? 'drag-over' : ''}`}
+              onDragOver={e => { e.preventDefault(); if (dragCtx.current?.type === 'main') setDragOver(i); }}
+              onDragLeave={() => setDragOver(null)}
+              onDrop={e => onMainDrop(e, i)}>
+              <div className="folder-main" draggable
+                onDragStart={e => { dragCtx.current = { type: 'main', idx: i }; e.dataTransfer.effectAllowed = 'move'; }}>
+                <span className="drag-handle">⠿⠿</span>
+                <span className="folder-emoji">{f.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <div className="folder-name">{f.name}</div>
+                  <div className="folder-meta">
+                    <span className="badge">{f.count} files</span>
+                    <span className="badge-sm">{f.structure.folders.length} subfolders</span>
+                  </div>
+                </div>
+                <div className="folder-actions">
+                  <span className="order-badge">#{i + 1}</span>
+                  <button className="btn-icon" onClick={e => { e.stopPropagation(); setExp(ex => ({ ...ex, [f.id]: !ex[f.id] })); }}>
+                    {exp[f.id] ? '▲' : '▼'}
+                  </button>
+                </div>
+              </div>
+              {exp[f.id] && (
+                <div className="folder-tree">
+                  {renderInnerTree(f.structure, i, null, 0)}
+                  {f.structure.folders.length === 0 && f.structure.files.length === 0 &&
+                    <div style={{ color: 'var(--text2)', fontSize: '.82rem', textAlign: 'center', padding: '1rem' }}>No items</div>
+                  }
+                </div>
+              )}
             </div>
           ))}
+          <div className="action-bar">
+            <button className="btn btn-secondary" onClick={load}>↺ Refresh</button>
+            <button className="btn btn-primary" onClick={deploy} disabled={!changed || saving}>
+              {saving ? <><span className="spin"></span> Deploying…</> : '🚀 Deploy Changes'}
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="settings-card">
-        <div className="settings-title" style={{marginBottom:'1rem'}}>📦 Repository Info</div>
-        <div className="repo-grid">
-          <div className="repo-item"><div className="repo-lbl">Content Repository</div><div className="repo-val">{CR.owner}/{CR.name}</div><div className="repo-branch">Branch: {CR.branch}</div></div>
-          <div className="repo-item"><div className="repo-lbl">Quartz Repository</div><div className="repo-val">{QR.owner}/{QR.name}</div><div className="repo-branch">Branch: {QR.branch}</div></div>
+      );
+    }
+
+    /* ============ FILE MANAGER ============ */
+    function FilePage() { return null; }
+    /* ============ SETTINGS ============ */
+    function SettingsPage() {
+      const [layout, setLayout] = useState('');
+      const [layoutSha, setLayoutSha] = useState('');
+      const [config, setConfig] = useState('');
+      const [configSha, setConfigSha] = useState('');
+      const [foldersFirst, setFoldersFirst] = useState(false);
+      const [toggles, setToggles] = useState({});
+      const [loading, setLoading] = useState(true);
+      const [savingL, setSavingL] = useState(false);
+
+      useEffect(() => { loadSettings(); }, []);
+      const loadSettings = async () => {
+        setLoading(true);
+        try {
+          const lf = await gGet(QR, 'quartz.layout.ts');
+          const lc = dec(lf.content); setLayout(lc); setLayoutSha(lf.sha);
+          const togs = {};
+          TOGGLES.forEach(t => {
+            const commented = new RegExp(`//\\s*\${t.comp.replace(/[()]/g,'\\$&')}`).test(lc);
+            const present = lc.includes(t.comp);
+            togs[t.key] = present && !commented;
+          });
+          setToggles(togs);
+          try {
+            const cf = await gGet(QR, 'quartz.config.ts');
+            const cc = dec(cf.content); setConfig(cc); setConfigSha(cf.sha);
+            setFoldersFirst(cc.includes('aIsFolder'));
+          } catch (e) { }
+        } catch (e) { toast.err('Failed to load settings: ' + e.message); }
+        finally { setLoading(false); }
+      };
+      const saveToggles = async () => {
+        setSavingL(true);
+        try {
+          let nl = layout;
+          TOGGLES.forEach(t => {
+            const idx = nl.indexOf(t.comp.replace('()', ''));
+            if (idx === -1) return;
+            const lineStart = nl.lastIndexOf('\n', idx);
+            const isCommented = nl.slice(lineStart, idx).includes('//');
+            const shouldBeCommented = !toggles[t.key];
+            if (isCommented === shouldBeCommented) return;
+            let blockStart = lineStart + 1;
+            let blockEnd = nl.indexOf('\n', idx);
+            const braceIdx = nl.indexOf('{', idx);
+            if (braceIdx !== -1 && braceIdx < blockEnd) {
+              let depth = 0;
+              for (let i = braceIdx; i < nl.length; i++) {
+                if (nl[i] === '{') depth++;
+                if (nl[i] === '}') {
+                  depth--;
+                  if (depth === 0) {
+                    blockEnd = nl.indexOf('\n', i) !== -1 ? nl.indexOf('\n', i) : i + 1;
+                    break;
+                  }
+                }
+              }
+            }
+            const block = nl.substring(blockStart, blockEnd);
+            let newBlock;
+            if (shouldBeCommented) {
+              newBlock = block.split('\n').map(l => '    // ' + l.trimStart()).join('\n');
+            } else {
+              newBlock = block.split('\n').map(l => l.replace(/^\s*\/\/\s*/, '    ')).join('\n');
+            }
+            nl = nl.substring(0, blockStart) + newBlock + nl.substring(blockEnd);
+          });
+          const res = await gPut(QR, 'quartz.layout.ts', nl, layoutSha, '⚙️ Update feature toggles via Admin Dashboard');
+          setLayout(nl); setLayoutSha(res.content.sha); toast.ok('Features saved! Quartz rebuilds shortly.');
+        } catch (e) { toast.err('Save failed: ' + e.message); }
+        finally { setSavingL(false); }
+      };
+
+      if (loading) return <div className="content">{[1, 2, 3].map(i => <div key={i} className="skel skel-card" style={{ height: '160px' }}></div>)}</div>;
+      return (
+        <div className="content">
+          <div className="settings-card">
+            <div className="settings-hdr">
+              <div><div className="settings-title">⚙️ Site Features</div><div className="settings-sub">Updates <code>quartz.layout.ts</code> in the quartz repo</div></div>
+              <button className="btn btn-primary btn-sm" onClick={saveToggles} disabled={savingL}>{savingL ? <span className="spin"></span> : 'Save Features'}</button>
+            </div>
+            <div className="toggles">
+              {TOGGLES.map(t => (
+                <div key={t.key} className="toggle-row">
+                  <span className="toggle-ico">{t.icon}</span>
+                  <div className="toggle-info"><div className="toggle-lbl">{t.label}</div><div className="toggle-desc">{t.desc}</div></div>
+                  <button className={`switch ${toggles[t.key] ? 'on' : 'off'}`} onClick={() => setToggles(p => ({ ...p, [t.key]: !p[t.key] }))}>
+                    <div className="switch-thumb"></div>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="settings-card">
+            <div className="settings-title" style={{ marginBottom: '1rem' }}>📦 Repository Info</div>
+            <div className="repo-grid">
+              <div className="repo-item"><div className="repo-lbl">Content Repository</div><div className="repo-val">{CR.owner}/{CR.name}</div><div className="repo-branch">Branch: {CR.branch}</div></div>
+              <div className="repo-item"><div className="repo-lbl">Quartz Repository</div><div className="repo-val">{QR.owner}/{QR.name}</div><div className="repo-branch">Branch: {QR.branch}</div></div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  );
-}
-/* ============ AUTH ============ */
+      );
+    }
+    /* ============ AUTH ============ */
 
 
-/* ============ APP ROOT ============ */
-function App(){
-  const [authed,setAuthed]=useState(false);
-  const [page,setPage]=useState('folders');
-  const [dark,setDark]=useState(false); // Default to false, will be set by useEffect
+    /* ============ APP ROOT ============ */
+    function App() {
+      const [authed, setAuthed] = useState(false);
+      const [page, setPage] = useState('folders');
+      const [dark, setDark] = useState(false); // Default to false, will be set by useEffect
 
-  useEffect(()=>{
-    const savedDark=localStorage.getItem('quartz_admin_dark');
-    if(savedDark!==null)setDark(savedDark==='true');
-    else setDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
-  },[]);
-  useEffect(()=>{
-    document.documentElement.setAttribute('data-theme',dark?'dark':'light');
-    localStorage.setItem('quartz_admin_dark',dark);
-  },[dark]);
+      useEffect(() => {
+        const savedDark = localStorage.getItem('quartz_admin_dark');
+        if (savedDark !== null) setDark(savedDark === 'true');
+        else setDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      }, []);
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        localStorage.setItem('quartz_admin_dark', dark);
+      }, [dark]);
 
-  useEffect(()=>{
-    const saved=localStorage.getItem('github_token');
-    if(saved){setTok(saved);setAuthed(true);}
-  },[]);
+      useEffect(() => {
+        const saved = localStorage.getItem('github_token');
+        if (saved) { setTok(saved); setAuthed(true); }
+      }, []);
 
-  const handleAuth=(t)=>{setTok(t);setAuthed(true);};
-  const handleLogout=()=>{localStorage.removeItem('github_token');setTok('');setAuthed(false);};
+      const handleAuth = (t) => { setTok(t); setAuthed(true); };
+      const handleLogout = () => { localStorage.removeItem('github_token'); setTok(''); setAuthed(false); };
 
-  if(!authed)return <><AuthPage onAuth={handleAuth}/><Toasts/></>;
-  const VIEWS={folders:FolderPage,settings:SettingsPage};
-  const View=VIEWS[page];
-  return(
-    <div className="app">
-      <Sidebar page={page} setPage={setPage}/>
-      <div className="main">
-        <Header page={page} dark={dark} setDark={setDark} onLogout={handleLogout}/>
-        <View/>
-      </div>
-      <Toasts/>
-    </div>
-  );
-}
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-</script>
+      if (!authed) return <><AuthPage onAuth={handleAuth} /><Toasts /></>;
+      const VIEWS = { folders: FolderPage, settings: SettingsPage };
+      const View = VIEWS[page];
+      return (
+        <div className="app">
+          <Sidebar page={page} setPage={setPage} />
+          <div className="main">
+            <Header page={page} dark={dark} setDark={setDark} onLogout={handleLogout} />
+            <View />
+          </div>
+          <Toasts />
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
+
 </html>
