@@ -311,8 +311,7 @@ function Modal({title,children,onClose,footer}){
 /* SIDEBAR */
 const PAGES=[
   {id:'folders',icon:'⠿',label:'Folder Organizer',desc:'Reorder homepage sections'},
-  {id:'files',icon:'📁',label:'File Manager',desc:'Create, rename & delete files'},
-  {id:'settings',icon:'⚙️',label:'Settings',desc:'Theme & site configuration'},
+  {id:'settings',icon:'⚙️',label:'Settings',desc:'Site configuration'},
 ];
 function Sidebar({page,setPage}){
   return(
@@ -338,8 +337,7 @@ function Sidebar({page,setPage}){
 function Header({page,dark,setDark,onLogout}){
   const info={
     folders:{t:'Folder Organizer',s:'Drag to reorder homepage sections'},
-    files:{t:'File Manager',s:'Browse, create, rename & delete content files'},
-    settings:{t:'Settings',s:'Configure theme colors and site features'},
+    settings:{t:'Settings',s:'Configure site features'},
   };
   const {t,s}=info[page]||info.folders;
   return(
@@ -483,7 +481,27 @@ function FolderPage(){
   const load=async()=>{
     setLoading(true);setDirtyDirs(new Set());setChanged(false);
     try{
-      const all=await Promise.all(CATS.map(async c=>{const s=await getTree(c.path);return{...c,count:countF(s),structure:s};}));
+      const rootData=await gList(CR,'');
+      const rootDirs=rootData.filter(i=>i.type==='dir'&&!i.name.startsWith('.')&&i.name!=='quartz');
+      
+      const all=await Promise.all(rootDirs.map(async (d)=>{
+        const existingCat=CATS.find(c=>c.path===d.path);
+        const catData=existingCat||{
+          id: d.name.toLowerCase().replace(/\s+/g,'-'),
+          name: d.name.toUpperCase(),
+          icon: '📁',
+          path: d.path,
+          slug: encodeURIComponent(d.name),
+          display: d.name,
+          desc: 'Folder from repository'
+        };
+        try{
+          const s=await getTree(catData.path);
+          return{...catData,count:countF(s),structure:s};
+        }catch(e){
+          return{...catData,count:0,structure:{files:[],folders:[]}};
+        }
+      }));
       setFolders(all);
     }catch(e){toast.err('Load failed: '+e.message);}
     finally{setLoading(false);}
@@ -754,170 +772,17 @@ function FolderPage(){
 }
 
 /* ============ FILE MANAGER ============ */
-function FilePage(){
-  const [cat,setCat]=useState(null);
-  const [tree,setTree]=useState(null);
-  const [treeLoading,setTreeLoading]=useState(false);
-  const [expanded,setExpanded]=useState({});
-  const [creating,setCreating]=useState(false);
-  const [renaming,setRenaming]=useState(null);
-  const [deleting,setDeleting]=useState(null);
-  const [viewing,setViewing]=useState(null);
-  const [fname,setFname]=useState('');
-  const [busy,setBusy]=useState(false);
-
-  const pickCat=async(c)=>{
-    setCat(c);setTreeLoading(true);setTree(null);
-    try{const s=await getTree(c.path);setTree(s);}
-    catch(e){toast.err('Load failed: '+e.message);}
-    finally{setTreeLoading(false);}
-  };
-  const viewFile=async(f)=>{
-    try{const d=await gGet(CR,f.path);setViewing({name:f.name,content:dec(d.content)});}
-    catch(e){toast.err(e.message);}
-  };
-  const createFile=async()=>{
-    if(!fname.trim())return;
-    const n=fname.trim().endsWith('.md')?fname.trim():fname.trim()+'.md';
-    setBusy(true);
-    try{
-      await gCreate(CR,cat.path+'/'+n,`---\ntitle: ${n.replace('.md','')}\n---\n\n`,'✨ Create '+n+' via Admin Dashboard');
-      toast.ok('Created '+n);setCreating(false);setFname('');const s=await getTree(cat.path);setTree(s);
-    }catch(e){toast.err(e.message);}finally{setBusy(false);}
-  };
-  const renameFile=async()=>{
-    const {f}=renaming;const nn=fname.trim();if(!nn)return;
-    const nf=nn.endsWith('.md')?nn:nn+'.md';
-    const np=f.path.replace(f.name,nf);
-    setBusy(true);
-    try{
-      const d=await gGet(CR,f.path);const c=dec(d.content);
-      await gCreate(CR,np,c,'✏️ Rename '+f.name+' → '+nf+' via Admin Dashboard');
-      await gDel(CR,f.path,d.sha,'🗑️ Remove old '+f.name+' (renamed)');
-      toast.ok('Renamed to '+nf);setRenaming(null);setFname('');const s=await getTree(cat.path);setTree(s);
-    }catch(e){toast.err(e.message);}finally{setBusy(false);}
-  };
-  const deleteFile=async()=>{
-    const {f}=deleting;setBusy(true);
-    try{
-      const d=await gGet(CR,f.path);
-      await gDel(CR,f.path,d.sha,'🗑️ Delete '+f.name+' via Admin Dashboard');
-      toast.ok('Deleted '+f.name);setDeleting(null);const s=await getTree(cat.path);setTree(s);
-    }catch(e){toast.err(e.message);}finally{setBusy(false);}
-  };
-
-  const renderTree=(s,depth=0)=>{
-    const items=[];
-    s.folders.forEach(sub=>{
-      const open=expanded[sub.path];
-      items.push(
-        <div key={sub.path}>
-          <div className="tree-item" style={{paddingLeft:`${depth*20}px`}}>
-            <div className="tree-folder-row" onClick={()=>setExpanded(e=>({...e,[sub.path]:!e[sub.path]}))}>
-              <span>{open?'📂':'📁'}</span><span>{sub.name}</span><span className="badge-sm" style={{marginLeft:'auto'}}>{countF(sub)}</span>
-            </div>
-          </div>
-          {open&&renderTree(sub,depth+1)}
-        </div>
-      );
-    });
-    s.files.forEach(f=>{
-      items.push(
-        <div key={f.path} className="tree-item" style={{paddingLeft:`${depth*20}px`}}>
-          <div className="tree-file-row">
-            <span className="tree-file-name" onClick={()=>viewFile(f)}>📄 {f.name.replace('.md','')}</span>
-            <div className="tree-file-btns">
-              <button className="btn-ico-sm" onClick={()=>{setRenaming({f});setFname(f.name.replace('.md',''));}} title="Rename">✏️</button>
-              <button className="btn-ico-sm btn-ico-danger" onClick={()=>setDeleting({f})} title="Delete">🗑️</button>
-            </div>
-          </div>
-        </div>
-      );
-    });
-    return items;
-  };
-
-  return(
-    <div className="content" style={{display:'flex',flexDirection:'column',gap:'1rem',height:'100%',paddingBottom:'1.5rem'}}>
-      <div className="fm-wrap" style={{flex:1,minHeight:0}}>
-        <div className="fm-sidebar">
-          <div className="fm-sidebar-title">Categories</div>
-          {CATS.map(c=>(
-            <button key={c.id} className={`fm-cat-btn ${cat?.id===c.id?'active':''}`} onClick={()=>pickCat(c)}>
-              <span>{c.icon}</span><span>{c.display}</span>
-            </button>
-          ))}
-        </div>
-        <div className="fm-main">
-          {!cat&&<div className="fm-empty"><div className="fm-empty-ico">📂</div><div>Select a category to browse files</div></div>}
-          {cat&&(
-            <>
-              <div className="fm-toolbar">
-                <div><span className="fm-title">{cat.icon} {cat.display}</span>{tree&&<span style={{color:'var(--text2)',fontSize:'.8rem'}}> · {countF(tree)} files</span>}</div>
-                <button className="btn btn-primary btn-sm" onClick={()=>{setCreating(true);setFname('');}}>+ New File</button>
-              </div>
-              <div className="file-tree">
-                {treeLoading&&[1,2,3,4].map(i=><div key={i} className="skel skel-row"></div>)}
-                {!treeLoading&&tree&&renderTree(tree)}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {creating&&<Modal title="Create New File" onClose={()=>setCreating(false)} footer={
-        <><button className="btn btn-secondary" onClick={()=>setCreating(false)}>Cancel</button>
-        <button className="btn btn-primary" onClick={createFile} disabled={busy||!fname}>{busy?<span className="spin"></span>:'✨ Create'}</button></>
-      }>
-        <div className="form-group">
-          <label>File name (inside {cat?.display})</label>
-          <input className="input" placeholder="e.g. Battle of Karbala" value={fname} onChange={e=>setFname(e.target.value)} onKeyDown={e=>e.key==='Enter'&&createFile()} autoFocus/>
-          <small>Saved as <code>{fname||'filename'}.md</code> with frontmatter template</small>
-        </div>
-      </Modal>}
-
-      {renaming&&<Modal title="Rename File" onClose={()=>setRenaming(null)} footer={
-        <><button className="btn btn-secondary" onClick={()=>setRenaming(null)}>Cancel</button>
-        <button className="btn btn-primary" onClick={renameFile} disabled={busy||!fname}>{busy?<span className="spin"></span>:'✏️ Rename'}</button></>
-      }>
-        <div className="form-group">
-          <label>New name for <code>{renaming.f.name}</code></label>
-          <input className="input" value={fname} onChange={e=>setFname(e.target.value)} onKeyDown={e=>e.key==='Enter'&&renameFile()} autoFocus/>
-        </div>
-      </Modal>}
-
-      {deleting&&<Modal title="Delete File" onClose={()=>setDeleting(null)} footer={
-        <><button className="btn btn-secondary" onClick={()=>setDeleting(null)}>Cancel</button>
-        <button className="btn btn-danger" onClick={deleteFile} disabled={busy}>{busy?<span className="spin"></span>:'🗑️ Delete Forever'}</button></>
-      }>
-        <div className="alert alert-error">⚠️ Are you sure you want to delete <strong>{deleting.f.name}</strong>? This cannot be undone.</div>
-      </Modal>}
-
-      {viewing&&<Modal title={viewing.name} onClose={()=>setViewing(null)} footer={
-        <button className="btn btn-secondary" onClick={()=>setViewing(null)}>Close</button>
-      }>
-        <pre className="file-preview">{viewing.content}</pre>
-      </Modal>}
-    </div>
-  );
-}
-
+function FilePage() { return null; }
 /* ============ SETTINGS ============ */
 function SettingsPage(){
   const [layout,setLayout]=useState('');
   const [layoutSha,setLayoutSha]=useState('');
-  const [scss,setScss]=useState('');
-  const [scssSha,setScssSha]=useState('');
   const [config,setConfig]=useState('');
   const [configSha,setConfigSha]=useState('');
   const [foldersFirst,setFoldersFirst]=useState(false);
   const [toggles,setToggles]=useState({});
-  const [primary,setPrimary]=useState('#2d6a4f');
-  const [accent,setAccent]=useState('#d4af37');
   const [loading,setLoading]=useState(true);
   const [savingL,setSavingL]=useState(false);
-  const [savingT,setSavingT]=useState(false);
-  const [savingS,setSavingS]=useState(false);
 
   useEffect(()=>{loadSettings();},[]);
   const loadSettings=async()=>{
@@ -927,18 +792,11 @@ function SettingsPage(){
       const lc=dec(lf.content);setLayout(lc);setLayoutSha(lf.sha);
       const togs={};
       TOGGLES.forEach(t=>{
-        const commented=new RegExp(`//\\s*${t.comp.replace(/[()]/g,'\\$&')}`).test(lc);
+        const commented=new RegExp(`//\\s*\${t.comp.replace(/[()]/g,'\\$&')}`).test(lc);
         const present=lc.includes(t.comp);
         togs[t.key]=present&&!commented;
       });
       setToggles(togs);
-      try{
-        const sf=await gGet(QR,'quartz/styles/custom.scss');
-        const sc=dec(sf.content);setScss(sc);setScssSha(sf.sha);
-        const pm=sc.match(/--primary:\s*(#[0-9a-fA-F]{3,6})/);
-        const am=sc.match(/--accent:\s*(#[0-9a-fA-F]{3,6})/);
-        if(pm)setPrimary(pm[1]);if(am)setAccent(am[1]);
-      }catch(e){}
       try{
         const cf=await gGet(QR,'quartz.config.ts');
         const cc=dec(cf.content);setConfig(cc);setConfigSha(cf.sha);
@@ -952,22 +810,14 @@ function SettingsPage(){
     try{
       let nl=layout;
       TOGGLES.forEach(t=>{
-        // Find the component, e.g. "Component.Explorer"
         const idx = nl.indexOf(t.comp.replace('()',''));
         if(idx===-1) return;
-        
-        // Find if that line is commented out
         const lineStart = nl.lastIndexOf('\n', idx);
         const isCommented = nl.slice(lineStart, idx).includes('//');
         const shouldBeCommented = !toggles[t.key];
-        
-        if (isCommented === shouldBeCommented) return; // already in correct state
-
-        // Find the start and end of this component block
+        if (isCommented === shouldBeCommented) return;
         let blockStart = lineStart + 1;
         let blockEnd = nl.indexOf('\n', idx);
-        
-        // If it's a function call with an object like Component.Explorer({...})
         const braceIdx = nl.indexOf('{', idx);
         if (braceIdx !== -1 && braceIdx < blockEnd) {
           let depth = 0;
@@ -982,92 +832,24 @@ function SettingsPage(){
             }
           }
         }
-
         const block = nl.substring(blockStart, blockEnd);
         let newBlock;
         if (shouldBeCommented) {
-          // Add // to every line in the block
           newBlock = block.split('\n').map(l => '    // ' + l.trimStart()).join('\n');
         } else {
-          // Remove // from every line in the block
           newBlock = block.split('\n').map(l => l.replace(/^\s*\/\/\s*/, '    ')).join('\n');
         }
         nl = nl.substring(0, blockStart) + newBlock + nl.substring(blockEnd);
       });
-      
       const res = await gPut(QR,'quartz.layout.ts',nl,layoutSha,'⚙️ Update feature toggles via Admin Dashboard');
       setLayout(nl);setLayoutSha(res.content.sha);toast.ok('Features saved! Quartz rebuilds shortly.');
     }catch(e){toast.err('Save failed: '+e.message);}
     finally{setSavingL(false);}
   };
-  const saveTheme=async()=>{
-    setSavingT(true);
-    try{
-      const block=`:root {\n  --primary: ${primary};\n  --accent: ${accent};\n}\n`;
-      let ns=scss;
-      const rootRegex = /(:root\s*\{)([^}]*)(\})/s;
-      if (rootRegex.test(ns)) {
-        ns = ns.replace(rootRegex, (match, open, inner, close) => {
-          let newInner = inner;
-          if (newInner.includes('--primary:')) newInner = newInner.replace(/--primary:[^;]+;/, `--primary: ${primary};`);
-          else newInner += `  --primary: ${primary};\n`;
-          if (newInner.includes('--accent:')) newInner = newInner.replace(/--accent:[^;]+;/, `--accent: ${accent};`);
-          else newInner += `  --accent: ${accent};\n`;
-          return `${open}${newInner}${close}`;
-        });
-      } else {
-        // If no :root exists, append it *after* any @use or @import rules
-        const importsRegex = /^(@(?:use|import).*?;[ \t]*\n)+/gm;
-        const match = importsRegex.exec(ns);
-        if (match) {
-          ns = ns.substring(0, match.index + match[0].length) + '\n' + block + '\n' + ns.substring(match.index + match[0].length);
-        } else {
-          ns = block + '\n' + ns;
-        }
-      }
-      
-      let res;
-      if(scssSha){res = await gPut(QR,'quartz/styles/custom.scss',ns,scssSha,'🎨 Update theme colors via Admin Dashboard');}
-      else{res = await gCreate(QR,'quartz/styles/custom.scss',ns,'🎨 Create custom theme via Admin Dashboard');}
-      setScss(ns);setScssSha(res.content.sha);toast.ok('Theme saved! Site will rebuild with new colors.');
-    }catch(e){toast.err('Theme save failed: '+e.message);}
-    finally{setSavingT(false);}
-  };
 
   if(loading)return <div className="content">{[1,2,3].map(i=><div key={i} className="skel skel-card" style={{height:'160px'}}></div>)}</div>;
   return(
     <div className="content">
-      <div className="settings-card">
-        <div className="settings-hdr">
-          <div><div className="settings-title">🎨 Theme Colors</div><div className="settings-sub">Updates <code>quartz/styles/custom.scss</code> in the quartz repo</div></div>
-          <button className="btn btn-primary btn-sm" onClick={saveTheme} disabled={savingT}>{savingT?<span className="spin"></span>:'Save Theme'}</button>
-        </div>
-        <div className="color-grid">
-          <div className="color-item">
-            <label>Primary Color</label>
-            <div className="color-row">
-              <input type="color" className="color-swatch" value={primary} onChange={e=>setPrimary(e.target.value)}/>
-              <input type="text" className="input input-sm" value={primary} onChange={e=>setPrimary(e.target.value)} style={{flex:1}}/>
-            </div>
-            <small>Used for links, buttons, headings</small>
-          </div>
-          <div className="color-item">
-            <label>Accent Color</label>
-            <div className="color-row">
-              <input type="color" className="color-swatch" value={accent} onChange={e=>setAccent(e.target.value)}/>
-              <input type="text" className="input input-sm" value={accent} onChange={e=>setAccent(e.target.value)} style={{flex:1}}/>
-            </div>
-            <small>Used for highlights and accents</small>
-          </div>
-          <div className="color-item">
-            <label>Preview</label>
-            <div className="color-preview" style={{background:`linear-gradient(135deg,${primary},${accent})`}}>
-              Safinat al-Najat
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="settings-card">
         <div className="settings-hdr">
           <div><div className="settings-title">⚙️ Site Features</div><div className="settings-sub">Updates <code>quartz.layout.ts</code> in the quartz repo</div></div>
@@ -1085,9 +867,6 @@ function SettingsPage(){
           ))}
         </div>
       </div>
-
-
-
       <div className="settings-card">
         <div className="settings-title" style={{marginBottom:'1rem'}}>📦 Repository Info</div>
         <div className="repo-grid">
@@ -1098,7 +877,6 @@ function SettingsPage(){
     </div>
   );
 }
-
 /* ============ AUTH ============ */
 
 
@@ -1127,7 +905,7 @@ function App(){
   const handleLogout=()=>{localStorage.removeItem('github_token');setTok('');setAuthed(false);};
 
   if(!authed)return <><AuthPage onAuth={handleAuth}/><Toasts/></>;
-  const VIEWS={folders:FolderPage,files:FilePage,settings:SettingsPage};
+  const VIEWS={folders:FolderPage,settings:SettingsPage};
   const View=VIEWS[page];
   return(
     <div className="app">
