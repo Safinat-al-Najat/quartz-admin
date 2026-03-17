@@ -503,9 +503,8 @@ function FolderPage(){
         let icon='📁',display=d.name,desc='Folder from repository';
         if(block){
           const mdDesc = block.split('\n').slice(1).join('\n').trim();
-          if(mdDesc) desc = mdDesc;
-          const m2=block.match(/## \\[([^\\]]+)\\]/);
-          if(m2){
+          const m2=block.match(/## \\[\s*([^\]]+)\s*\]/);
+          if (m2) {
             const parts=m2[1].split(' ');
             if(parts.length>1){icon=parts[0];display=parts.slice(1).join(' ');}
             else{icon='';display=parts[0];}
