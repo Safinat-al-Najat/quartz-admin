@@ -1456,7 +1456,8 @@
             const searchSlugs = [path, encodeURIComponent(path), path.replace(/ /g, '%20')];
             for (let s of searchSlugs) {
               const escapedSlug = s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-              const re = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[\\s\\S]*?(?=\\n## |\\nFor any queries|$)`);
+              // التعديل هنا لضمان التوقف الصحيح قبل الترويسة التالية أو الفوتر
+              const re = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[\\s\\S]*?(?=\\s*## |\\s*For any queries|$)`);
               const m = indexContent.match(re);
               if (m) return m[0].trim();
             }
@@ -1666,30 +1667,41 @@
           const file = await gGet(CR, 'index.md');
           const cur = dec(file.content);
 
-          // 1. Generate the new folder sections
+          // تنظيف نهايات الأسطر لتجنب مشاكل التنسيق
+          const lines = cur.split('\n').map(l => l.trimRight());
+
+          // 2. تحديد بداية الأقسام
+          const vi = lines.findIndex(l => l.includes('Surah Al-Imran'));
+          // 3. تحديد مكان الفوتر
+          const ci = lines.findIndex(l => l.includes('For any queries'));
+
+          if (vi < 0) throw new Error('Cannot find Surah Al-Imran marker in index.md');
+
+          // إنشاء أقسام المجلدات الجديدة مع التأكد من خلوها من الفوتر
           const sec = folders.map(f => {
-            if (f.rawBlock) return f.rawBlock;
+            let block = f.rawBlock;
+            if (block) {
+              // إذا تم التقاط الفوتر بالخطأ، نقوم بقصه
+              const fIdx = block.indexOf('For any queries');
+              if (fIdx !== -1) block = block.substring(0, fIdx).trim();
+              return block;
+            }
             return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
           }).join('\n\n');
 
-          const lines = cur.split('\n');
-          // 2. Locate the start marker (after the verse)
-          const vi = lines.findIndex(l => l.includes('Surah Al-Imran'));
-          // 3. Locate the end marker (the start of the contact section)
-          const ci = lines.findIndex(l => l.includes('For any queries'));
+          // أخذ نسخة واحدة فقط من معلومات التواصل وتجاهل النسخ المكررة
+          let footer = 'For any queries:\n📧 safinatalnajat151214@gmail.com';
+          if (ci >= 0) {
+            footer = lines.slice(ci, ci + 2).join('\n');
+          }
 
-          if (vi < 0 || ci < 0) throw new Error('Cannot find section markers in index.md');
-
-          // 4. Construct the file: 
-          // Everything BEFORE the verse + the verse
-          // + the NEW sections
-          // + everything FROM "For any queries" to the end (preventing duplication)
+          // 4. بناء الملف النهائي النظيف
           const newC = [
             ...lines.slice(0, vi + 1),
             '',
             sec,
             '',
-            ...lines.slice(ci)
+            footer
           ].join('\n');
 
           await gPut(CR, 'index.md', newC, file.sha, '📝 Update folder order via Admin Dashboard');
