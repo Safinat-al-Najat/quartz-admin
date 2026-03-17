@@ -1456,8 +1456,7 @@
             const searchSlugs = [path, encodeURIComponent(path), path.replace(/ /g, '%20')];
             for (let s of searchSlugs) {
               const escapedSlug = s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-              // التعديل هنا لضمان التوقف الصحيح قبل الترويسة التالية أو الفوتر
-              const re = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[\\s\\S]*?(?=\\s*## |\\s*For any queries|$)`);
+              const re = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[\\s\\S]*?(?=\\n\\s*## |\\n\\s*---|\\n\\s*###|\\n.*For any queries.*|$)`, 'i');
               const m = indexContent.match(re);
               if (m) return m[0].trim();
             }
@@ -1488,7 +1487,7 @@
               slug: encodeURIComponent(d.name),
               display: block ? display : (existingCat?.display || d.name),
               desc: block ? desc : (existingCat?.desc || desc),
-              rawBlock: block ? block.split(/---*\s*### For any queries/i)[0].split(/For any queries/i)[0].trim() : ''
+              rawBlock: block ? block.split(/for any queries/i)[0].replace(/[-\s#]*$/, '').trim() : ''
             };
             try {
               const s = await getTree(catData.path);
@@ -1679,12 +1678,10 @@
             .map(f => {
               let block = f.rawBlock;
               if (block) {
-                // Aggressively strip ANY footers that got swallowed into the folder block
-                const fIdx = block.indexOf('For any queries');
-                if (fIdx !== -1) {
-                  block = block.substring(0, fIdx).replace(/---$/, '');
-                }
-                return block.trim();
+                // Aggressively strip ANY footers that got swallowed
+                const fIdx = block.toLowerCase().indexOf('for any queries');
+                if (fIdx !== -1) block = block.substring(0, fIdx);
+                return block.replace(/[-\s#]*$/, '').trim();
               }
               return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
             }).join('\n\n');
