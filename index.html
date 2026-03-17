@@ -482,18 +482,46 @@ function FolderPage(){
     setLoading(true);setDirtyDirs(new Set());setChanged(false);
     try{
       const rootData=await gList(CR,'');
-      const rootDirs=rootData.filter(i=>i.type==='dir'&&!i.name.startsWith('.')&&i.name!=='quartz');
+      const rootDirs=rootData.filter(i=>i.type==='dir'&&!i.name.startsWith('.')&&i.name!=='quartz'&&i.name.toLowerCase()!=='pngs'&&i.name.toLowerCase()!=='png');
       
+      let indexContent='';
+      try{const f=await gGet(CR,'index.md');indexContent=dec(f.content);}catch(e){}
+
+      const extractSection=(path)=>{
+        const searchSlugs=[path,encodeURIComponent(path),path.replace(/ /g,'%20')];
+        for(let s of searchSlugs){
+          const escapedSlug=s.replace(/[-\/\\^$*+?.()|[\]{}]/g,'\\$&');
+          const re=new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[\\s\\S]*?(?=\\n## |\\nFor any queries|$)`);
+          const m=indexContent.match(re);
+          if(m)return m[0].trim();
+        }
+        return '';
+      };
+
       const all=await Promise.all(rootDirs.map(async (d)=>{
+        let block=extractSection(d.path);
+        let icon='📁',display=d.name,desc='Folder from repository';
+        if(block){
+          const mdDesc = block.split('\n').slice(1).join('\n').trim();
+          if(mdDesc) desc = mdDesc;
+          const m2=block.match(/## \\[([^\\]]+)\\]/);
+          if(m2){
+            const parts=m2[1].split(' ');
+            if(parts.length>1){icon=parts[0];display=parts.slice(1).join(' ');}
+            else{icon='';display=parts[0];}
+          }
+        }
+
         const existingCat=CATS.find(c=>c.path===d.path);
-        const catData=existingCat||{
-          id: d.name.toLowerCase().replace(/\s+/g,'-'),
+        const catData={
+          id: existingCat?.id || d.name.toLowerCase().replace(/\s+/g,'-'),
           name: d.name.toUpperCase(),
-          icon: '📁',
+          icon: block ? icon : (existingCat?.icon || '📁'),
           path: d.path,
           slug: encodeURIComponent(d.name),
-          display: d.name,
-          desc: 'Folder from repository'
+          display: block ? display : (existingCat?.display || d.name),
+          desc: block ? desc : (existingCat?.desc || desc),
+          rawBlock: block
         };
         try{
           const s=await getTree(catData.path);
@@ -671,7 +699,10 @@ function FolderPage(){
     try{
       const file=await gGet(CR,'index.md');
       const cur=dec(file.content);
-      const sec=folders.map(f=>`## [${f.icon} ${f.display}](${f.slug})\n${f.desc}`).join('\n\n');
+      const sec=folders.map(f=>{
+        if(f.rawBlock) return f.rawBlock;
+        return `## [${f.icon} ${f.display}](${f.slug})\n${f.desc}`;
+      }).join('\n\n');
       const lines=cur.split('\n');
       const vi=lines.findIndex(l=>l.includes('Surah Al-Imran'));
       const ci=lines.findIndex(l=>l.includes('For any queries'));
