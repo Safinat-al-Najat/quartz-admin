@@ -1456,9 +1456,20 @@
             const searchSlugs = [path, encodeURIComponent(path), path.replace(/ /g, '%20')];
             for (let s of searchSlugs) {
               const escapedSlug = s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-              const re = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[\\s\\S]*?(?=\\n\\s*## |\\n\\s*---|\\n\\s*###|\\n.*For any queries.*|$)`, 'i');
+              // Match section heading and content, but stop BEFORE the footer divider (---) or next section
+              const re = new RegExp(`(## \\[[^\\]]+\\]\\(${escapedSlug}\\)[^\\n]*(?:\\n(?!---|###|## \\[)[^\\n]*)*)`, 'i');
               const m = indexContent.match(re);
-              if (m) return m[0].trim();
+              if (m) {
+                let extracted = m[0].trim();
+                // Additional safety: remove any footer content that might have leaked in
+                const footerIdx = extracted.toLowerCase().indexOf('for any queries');
+                if (footerIdx !== -1) {
+                  extracted = extracted.substring(0, footerIdx).trim();
+                }
+                // Remove trailing dashes and whitespace
+                extracted = extracted.replace(/[-\s]+$/, '').trim();
+                return extracted;
+              }
             }
             return '';
           };
@@ -1487,7 +1498,8 @@
               slug: encodeURIComponent(d.name),
               display: block ? display : (existingCat?.display || d.name),
               desc: block ? desc : (existingCat?.desc || desc),
-              rawBlock: block ? block.split(/for any queries/i)[0].replace(/[-\s#]*$/, '').trim() : ''
+              // Clean rawBlock: remove any footer text and trailing dashes/whitespace
+              rawBlock: block ? block.replace(/[-\s]+$/, '').trim() : ''
             };
             try {
               const s = await getTree(catData.path);
@@ -1678,13 +1690,26 @@
             .map(f => {
               let block = f.rawBlock;
               if (block) {
-                // Aggressively strip ANY footers that got swallowed
-                const fIdx = block.toLowerCase().indexOf('for any queries');
-                if (fIdx !== -1) block = block.substring(0, fIdx);
-                return block.replace(/[-\s#]*$/, '').trim();
+                // Triple-check: strip ANY footer content that might have leaked through
+                // Case-insensitive search for common footer markers
+                const footerMarkers = ['for any queries', '###', 'mailto:', '@gmail.com'];
+                for (const marker of footerMarkers) {
+                  const idx = block.toLowerCase().indexOf(marker);
+                  if (idx !== -1) {
+                    block = block.substring(0, idx);
+                  }
+                }
+                // Remove trailing dashes, hashes, and whitespace
+                block = block.replace(/[-#\s]+$/, '').trim();
+                // If after cleaning there's nothing left, fall back to generating a fresh section
+                if (!block || block.length < 5) {
+                  return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
+                }
+                return block;
               }
               return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
-            }).join('\n\n');
+            })
+            .join('\n\n');
 
           // 3. Assemble the file: Top + Clean Folders + EXACTLY ONE footer
           const FOOTER = '---\n### For any queries:\n📧 [safinatalnajat151214@gmail.com](mailto:safinatalnajat151214@gmail.com)\n';
