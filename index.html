@@ -1488,7 +1488,7 @@
               slug: encodeURIComponent(d.name),
               display: block ? display : (existingCat?.display || d.name),
               desc: block ? desc : (existingCat?.desc || desc),
-              rawBlock: block
+              rawBlock: block ? block.split('For any queries')[0].trim() : ''
             };
             try {
               const s = await getTree(catData.path);
@@ -1689,14 +1689,8 @@
               return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
             }).join('\n\n');
 
-          // 3. Assemble the file: Top Section + Clean Folders + EXACTLY ONE hardcoded Footer
-          const FOOTER = `For any queries:
-          📧 safinatalnajat151214@gmail.com`;
-
-          let baseContent = lines.join('\n');
-
-          // Remove ALL previous footers
-          baseContent = baseContent.replace(/For any queries:[\s\S]*$/g, '');
+          // 3. Assemble the file: Top + Clean Folders + EXACTLY ONE footer
+          const FOOTER = 'For any queries:\n📧 safinatalnajat151214@gmail.com';
 
           const newC = [
             ...lines.slice(0, vi + 1),
