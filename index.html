@@ -1665,18 +1665,35 @@
         try {
           const file = await gGet(CR, 'index.md');
           const cur = dec(file.content);
+
+          // 1. Generate the new folder sections
           const sec = folders.map(f => {
             if (f.rawBlock) return f.rawBlock;
             return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
           }).join('\n\n');
+
           const lines = cur.split('\n');
+          // 2. Locate the start marker (after the verse)
           const vi = lines.findIndex(l => l.includes('Surah Al-Imran'));
+          // 3. Locate the end marker (the start of the contact section)
           const ci = lines.findIndex(l => l.includes('For any queries'));
+
           if (vi < 0 || ci < 0) throw new Error('Cannot find section markers in index.md');
-          const newC = [...lines.slice(0, vi + 1), '', sec, '', ...lines.slice(ci)].join('\n');
+
+          // 4. Construct the file: 
+          // Everything BEFORE the verse + the verse
+          // + the NEW sections
+          // + everything FROM "For any queries" to the end (preventing duplication)
+          const newC = [
+            ...lines.slice(0, vi + 1),
+            '',
+            sec,
+            '',
+            ...lines.slice(ci)
+          ].join('\n');
+
           await gPut(CR, 'index.md', newC, file.sha, '📝 Update folder order via Admin Dashboard');
 
-          // Update weights for dirty subfolders
           await processWeightUpdates();
 
           toast.ok('Deployed successfully! Site rebuilds in ~2 min.');
