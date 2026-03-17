@@ -1666,52 +1666,50 @@
         try {
           const file = await gGet(CR, 'index.md');
           const cur = dec(file.content);
+          const lines = cur.split('\n');
 
-          // تنظيف نهايات الأسطر لتجنب مشاكل التنسيق
-          const lines = cur.split('\n').map(l => l.trimRight());
-
-          // 2. تحديد بداية الأقسام
+          // 1. Find the cut-off point right after the Quran verse
           const vi = lines.findIndex(l => l.includes('Surah Al-Imran'));
-          // 3. تحديد مكان الفوتر
-          const ci = lines.findIndex(l => l.includes('For any queries'));
-
           if (vi < 0) throw new Error('Cannot find Surah Al-Imran marker in index.md');
 
-          // إنشاء أقسام المجلدات الجديدة مع التأكد من خلوها من الفوتر
-          const sec = folders.map(f => {
-            let block = f.rawBlock;
-            if (block) {
-              // إذا تم التقاط الفوتر بالخطأ، نقوم بقصه
-              const fIdx = block.indexOf('For any queries');
-              if (fIdx !== -1) block = block.substring(0, fIdx).trim();
-              return block;
-            }
-            return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
-          }).join('\n\n');
+          // 2. Build the folders list
+          const sec = folders
+            // THIS LINE PREVENTS THE PNG FOLDER FROM BEING WRITTEN TO THE SITE
+            .filter(f => f.name.toLowerCase() !== 'png' && f.name.toLowerCase() !== 'pngs')
+            .map(f => {
+              let block = f.rawBlock;
+              if (block) {
+                // Aggressively strip ANY footers that got swallowed into the folder block
+                const fIdx = block.indexOf('For any queries');
+                if (fIdx !== -1) {
+                  block = block.substring(0, fIdx);
+                }
+                return block.trim();
+              }
+              return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
+            }).join('\n\n');
 
-          // أخذ نسخة واحدة فقط من معلومات التواصل وتجاهل النسخ المكررة
-          let footer = 'For any queries:\n📧 safinatalnajat151214@gmail.com';
-          if (ci >= 0) {
-            footer = lines.slice(ci, ci + 2).join('\n');
-          }
-
-          // 4. بناء الملف النهائي النظيف
+          // 3. Assemble the file: Top Section + Clean Folders + EXACTLY ONE hardcoded Footer
           const newC = [
-            ...lines.slice(0, vi + 1),
-            '',
-            sec,
-            '',
-            footer
+            ...lines.slice(0, vi + 1), // Top header and verse
+            '',                        // Blank line
+            sec,                       // Folders (without PNG)
+            '',                        // Blank line
+            'For any queries:',        // The ONE and ONLY footer
+            '📧 safinatalnajat151214@gmail.com'
           ].join('\n');
 
-          await gPut(CR, 'index.md', newC, file.sha, '📝 Update folder order via Admin Dashboard');
+          await gPut(CR, 'index.md', newC, file.sha, '📝 Update index and clean footer');
 
           await processWeightUpdates();
 
-          toast.ok('Deployed successfully! Site rebuilds in ~2 min.');
+          toast.ok('Deployed successfully! Duplicates destroyed.');
           setChanged(false); setDirtyDirs(new Set());
-        } catch (e) { toast.err('Deploy failed: ' + e.message); }
-        finally { setSaving(false); }
+        } catch (e) {
+          toast.err('Deploy failed: ' + e.message);
+        } finally {
+          setSaving(false);
+        }
       };
 
       /* Recursive tree renderer with drag & drop at every level */
