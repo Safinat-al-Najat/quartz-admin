@@ -1488,7 +1488,7 @@
               slug: encodeURIComponent(d.name),
               display: block ? display : (existingCat?.display || d.name),
               desc: block ? desc : (existingCat?.desc || desc),
-              rawBlock: block ? block.split('For any queries')[0].trim() : ''
+              rawBlock: block ? block.split(/---*\s*### For any queries/i)[0].split(/For any queries/i)[0].trim() : ''
             };
             try {
               const s = await getTree(catData.path);
@@ -1682,7 +1682,7 @@
                 // Aggressively strip ANY footers that got swallowed into the folder block
                 const fIdx = block.indexOf('For any queries');
                 if (fIdx !== -1) {
-                  block = block.substring(0, fIdx);
+                  block = block.substring(0, fIdx).replace(/---$/, '');
                 }
                 return block.trim();
               }
@@ -1690,7 +1690,7 @@
             }).join('\n\n');
 
           // 3. Assemble the file: Top + Clean Folders + EXACTLY ONE footer
-          const FOOTER = 'For any queries:\n📧 safinatalnajat151214@gmail.com';
+          const FOOTER = '---\n### For any queries:\n📧 [safinatalnajat151214@gmail.com](mailto:safinatalnajat151214@gmail.com)\n';
 
           const newC = [
             ...lines.slice(0, vi + 1),
