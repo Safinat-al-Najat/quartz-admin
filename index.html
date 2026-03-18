@@ -1456,39 +1456,17 @@
             const searchSlugs = [path, encodeURIComponent(path), path.replace(/ /g, '%20')];
             for (let s of searchSlugs) {
               const escapedSlug = s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-              // Match the section heading line
-              const headingRe = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[^\\n]*`, 'i');
-              const headingMatch = indexContent.match(headingRe);
-              if (!headingMatch) continue;
-
-              const headingStart = indexContent.indexOf(headingMatch[0]);
-              const headingEnd = headingStart + headingMatch[0].length;
-
-              // Find where this section ends - look for the FIRST occurrence of any ending marker
-              const afterHeading = indexContent.substring(headingEnd);
-              const endMarkers = [
-                '\n---',           // Horizontal rule
-                '\n## [',          // Next section
-                '\n###',           // Subsection
-                '\nFor any queries', // Footer start (case matters here, we'll handle case below)
-                '\nfor any queries', // Lowercase variant
-              ];
-
-              let sectionEnd = afterHeading.length; // Default to end of content
-              for (const marker of endMarkers) {
-                const idx = afterHeading.indexOf(marker);
-                if (idx !== -1 && idx < sectionEnd) {
-                  sectionEnd = idx;
+              const re = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[^\\n]*(?:\\n[^\\n]*)*`, 'i');
+              const m = indexContent.match(re);
+              if (m) {
+                let extracted = m[0];
+                // Simply cut at "for any queries" (case-insensitive)
+                const footerIdx = extracted.toLowerCase().indexOf('for any queries');
+                if (footerIdx !== -1) {
+                  extracted = extracted.substring(0, footerIdx);
                 }
+                return extracted.trim();
               }
-
-              // Extract just the section content (heading + description lines only)
-              let extracted = (headingMatch[0] + afterHeading.substring(0, sectionEnd)).trim();
-
-              // Remove trailing whitespace and empty lines
-              extracted = extracted.replace(/[\s\n]+$/, '').trim();
-
-              return extracted;
             }
             return '';
           };
