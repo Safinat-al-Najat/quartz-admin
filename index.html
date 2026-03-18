@@ -1662,7 +1662,6 @@
           }
         } catch (e) {
           toast.err('Bulk commit failed: ' + e.message);
-          err++;
         }
 
         if (err > 0) toast.err(`Failed to update some files.`);
@@ -1672,58 +1671,9 @@
         setSaving(true);
         toast.info('Starting deployment... do not close the page.');
         try {
-          const file = await gGet(CR, 'index.md');
-          const cur = dec(file.content);
-          const lines = cur.split('\n');
-
-          // 1. Find the cut-off point right after the Quran verse
-          const vi = lines.findIndex(l => l.includes('Surah Al-Imran'));
-          if (vi < 0) throw new Error('Cannot find Surah Al-Imran marker in index.md');
-
-          // 2. Build the folders list
-          const sec = folders
-            // THIS LINE PREVENTS THE PNG FOLDER FROM BEING WRITTEN TO THE SITE
-            .filter(f => f.name.toLowerCase() !== 'png' && f.name.toLowerCase() !== 'pngs')
-            .map(f => {
-              let block = f.rawBlock;
-              if (block) {
-                // Triple-check: strip ANY footer content that might have leaked through
-                // Case-insensitive search for common footer markers
-                const footerMarkers = ['for any queries', '###', 'mailto:', '@gmail.com'];
-                for (const marker of footerMarkers) {
-                  const idx = block.toLowerCase().indexOf(marker);
-                  if (idx !== -1) {
-                    block = block.substring(0, idx);
-                  }
-                }
-                // Remove trailing dashes, hashes, and whitespace
-                block = block.replace(/[-#\s]+$/, '').trim();
-                // If after cleaning there's nothing left, fall back to generating a fresh section
-                if (!block || block.length < 5) {
-                  return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
-                }
-                return block;
-              }
-              return `## [${f.icon} ${f.display}](${f.slug})${f.desc ? '\n' + f.desc : ''}`;
-            })
-            .join('\n\n');
-
-          // 3. Assemble the file: Top + Clean Folders + EXACTLY ONE footer
-          const FOOTER = '---\n### For any queries:\n📧 [safinatalnajat151214@gmail.com](mailto:safinatalnajat151214@gmail.com)\n';
-
-          const newC = [
-            ...lines.slice(0, vi + 1),
-            '',
-            sec,
-            '',
-            FOOTER
-          ].join('\n');
-
-          await gPut(CR, 'index.md', newC, file.sha, '📝 Update index and clean footer');
-
           await processWeightUpdates();
 
-          toast.ok('Deployed successfully! Duplicates destroyed.');
+          toast.ok('Deployed successfully! Only subfolder/file order was updated.');
           setChanged(false); setDirtyDirs(new Set());
         } catch (e) {
           toast.err('Deploy failed: ' + e.message);
@@ -1773,13 +1723,8 @@
         <div className="content">
           {changed && <div className="alert alert-warn">⚠️ Unsaved changes — click Deploy to publish.</div>}
           {folders.map((f, i) => (
-            <div key={f.id} className={`folder-card ${dragOver === i ? 'drag-over' : ''}`}
-              onDragOver={e => { e.preventDefault(); if (dragCtx.current?.type === 'main') setDragOver(i); }}
-              onDragLeave={() => setDragOver(null)}
-              onDrop={e => onMainDrop(e, i)}>
-              <div className="folder-main" draggable
-                onDragStart={e => { dragCtx.current = { type: 'main', idx: i }; e.dataTransfer.effectAllowed = 'move'; }}>
-                <span className="drag-handle">⠿⠿</span>
+            <div key={f.id} className="folder-card">
+              <div className="folder-main">
                 <span className="folder-emoji">{f.icon}</span>
                 <div style={{ flex: 1 }}>
                   <div className="folder-name">{f.name}</div>
