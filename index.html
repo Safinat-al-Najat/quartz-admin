@@ -1914,7 +1914,7 @@
       const [loadingPwd, setLoadingPwd] = useState(true);
       const [loadingNotes, setLoadingNotes] = useState(true);
       const [savingPwd, setSavingPwd] = useState(false);
-      const [togglingNote, setTogglingNote] = useState({});
+      const [vaultPath, setVaultPath] = useState('locked');
 
       useEffect(() => {
         loadPwd();
@@ -1966,79 +1966,114 @@
         setLoadingNotes(true);
         try {
           const treeData = await gh(`/repos/${CR.owner}/${CR.name}/git/trees/${CR.branch}?recursive=1`);
+          
+          // Determine the vault path dynamically based on folder structure in repository
+          const hasExtensiveResearch = treeData.tree.some(i => i.path.startsWith('Extensive Research/'));
+          const vPath = hasExtensiveResearch ? 'Extensive Research/locked' : 'locked';
+          setVaultPath(vPath);
+
           const mdFiles = treeData.tree
-            .filter(i => i.type === 'blob' && i.path.endsWith('.md') && !i.path.startsWith('.') && i.path !== 'index.md')
+            .filter(i => i.type === 'blob' && i.path.endsWith('.md') && i.path.startsWith(vPath + '/'))
             .map(i => ({
               name: i.path.split('/').pop().replace('.md', ''),
               path: i.path,
-              sha: i.sha,
-              locked: false,
-              loading: true
+              sha: i.sha
             }));
           setNotes(mdFiles);
-
-          // Batch load lock status
-          const fileData = {};
-          const batchSize = 5;
-          for (let i = 0; i < mdFiles.length; i += batchSize) {
-            const batch = mdFiles.slice(i, i + batchSize);
-            await Promise.all(batch.map(async (file) => {
-              try {
-                const res = await gGet(CR, file.path);
-                const content = dec(res.content);
-                const locked = isFileLocked(content);
-                fileData[file.path] = { sha: res.sha, content, locked };
-              } catch (e) {
-                console.error(e);
-              }
-            }));
-            setNotes(prev => prev.map(n => fileData[n.path] ? { ...n, locked: fileData[n.path].locked, loading: false } : n));
-          }
-          // Store fileData on window so toggleLock can access it
-          window._securityFileData = fileData;
         } catch (e) {
-          toast.err('Failed to load notes: ' + e.message);
+          toast.err('Failed to load vault files: ' + e.message);
         } finally {
           setLoadingNotes(false);
         }
       };
 
-      const toggleLock = async (note) => {
-        const fileData = window._securityFileData || {};
-        const cached = fileData[note.path];
-        if (!cached) return;
-
-        setTogglingNote(prev => ({ ...prev, [note.path]: true }));
-        try {
-          const newLocked = !cached.locked;
-          const newContent = setLocked(cached.content, newLocked);
-          const res = await gPut(CR, note.path, newContent, cached.sha, `🔒 Toggle lock for ${note.name} via Admin Dashboard`);
-          
-          // Update cache
-          fileData[note.path] = {
-            sha: res.content.sha,
-            content: newContent,
-            locked: newLocked
-          };
-          window._securityFileData = fileData;
-
-          // Update state
-          setNotes(prev => prev.map(n => n.path === note.path ? { ...n, locked: newLocked, sha: res.content.sha } : n));
-          toast.ok(`${note.name} is now ${newLocked ? 'LOCKED' : 'UNLOCKED'}`);
-        } catch (e) {
-          toast.err('Toggle lock failed: ' + e.message);
-        } finally {
-          setTogglingNote(prev => ({ ...prev, [note.path]: false }));
+      // Convert flat array of vault files into a nested tree structure
+      const buildTree = (files, prefix) => {
+        const root = { name: 'Vault', type: 'dir', children: {} };
+        for (const file of files) {
+          // Remove prefix plus slash
+          const relPath = file.path.substring(prefix.length + 1);
+          if (!relPath) continue;
+          const parts = relPath.split('/');
+          let current = root;
+          for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            const isLast = i === parts.length - 1;
+            if (isLast) {
+              current.children[part] = { name: part.replace('.md', ''), type: 'file', path: file.path };
+            } else {
+              if (!current.children[part]) {
+                current.children[part] = { name: part, type: 'dir', children: {} };
+              }
+              current = current.children[part];
+            }
+          }
         }
+        return root;
+      };
+
+      const renderTree = (node, depth = 0) => {
+        const children = Object.values(node.children || {});
+        
+        // Sort children: directories first, then files
+        children.sort((a, b) => {
+          if (a.type !== b.type) {
+            return a.type === 'dir' ? -1 : 1;
+          }
+          return a.name.localeCompare(b.name);
+        });
+
+        return children.map(child => {
+          if (child.type === 'file') {
+            return (
+              <div key={child.path} className="tree-file-node" style={{ paddingLeft: `${(depth + 1) * 1.25}rem`, display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.375rem 0' }}>
+                <span style={{ fontSize: '1rem', width: '20px', textAlign: 'center' }}>📄</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text)' }}>{child.name}</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text2)' }}>{child.path}</div>
+                </div>
+                <span className="badge-sm" style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.68rem', padding: '0.15rem 0.4rem', borderRadius: '4px', whiteSpace: 'nowrap' }}>Secured</span>
+              </div>
+            );
+          } else {
+            return (
+              <div key={child.name} className="tree-dir-node" style={{ margin: '0.5rem 0' }}>
+                <div className="tree-dir-header" style={{ paddingLeft: `${depth * 1.25}rem`, display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', fontSize: '0.9rem', color: 'var(--secondary)' }}>
+                  <span style={{ fontSize: '1.05rem', width: '20px', textAlign: 'center' }}>📁</span>
+                  <span>{child.name.toUpperCase()}</span>
+                </div>
+                <div className="tree-dir-body">
+                  {renderTree(child, depth + 1)}
+                </div>
+              </div>
+            );
+          }
+        });
       };
 
       if (loadingPwd && loadingNotes) {
         return <div className="content"><div className="skel skel-card" style={{ height: '140px' }}></div><div className="skel skel-card" style={{ height: '300px' }}></div></div>;
       }
 
+      const treeRoot = buildTree(notes, vaultPath);
+
       return (
         <div className="content">
-          <div className="settings-card">
+          {/* Vault Status Banner */}
+          <div className="settings-card" style={{ borderLeft: '4px solid var(--primary)', background: 'var(--bg2)', padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+              <div style={{ fontSize: '2rem', lineHeight: '1' }}>🔒</div>
+              <div>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>Folder-Level Vault Active</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text2)', marginTop: '0.2rem' }}>
+                  All markdown assets recursively under <code>{vaultPath}/</code> will be automatically encrypted and compiled into secure containers.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Master Encryption Password Form */}
+          <div className="settings-card" style={{ marginBottom: '1.5rem' }}>
             <div className="settings-hdr">
               <div>
                 <div className="settings-title">🔑 Master Encryption Password</div>
@@ -2048,7 +2083,7 @@
                 {savingPwd ? <span className="spin"></span> : 'Save Password'}
               </button>
             </div>
-            <div className="form-group" style={{ maxWidth: '400px', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <div className="form-group" style={{ maxWidth: '400px', display: 'flex', gap: '0.75rem', alignItems: 'center', marginTop: '1rem' }}>
               <input
                 className="input"
                 type="password"
@@ -2059,43 +2094,20 @@
             </div>
           </div>
 
+          {/* Vault File Tree Viewport */}
           <div className="settings-card">
-            <div className="settings-title" style={{ marginBottom: '1.25rem' }}>🔒 Research Notes Archives</div>
+            <div className="settings-title" style={{ marginBottom: '0.35rem' }}>📂 Vault File Tree Viewport</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text2)', marginBottom: '1.25rem' }}>
+              Showing all files currently found inside <code>{vaultPath}/</code> in the content repository. These files will be secured during the next compilation run.
+            </div>
             {loadingNotes ? (
-              <div style={{ textAlign: 'center', padding: '2rem' }}><span className="spin"></span> Loading note list...</div>
+              <div style={{ textAlign: 'center', padding: '2rem' }}><span className="spin"></span> Loading vault files...</div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {notes.map(note => (
-                  <div key={note.path} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem 0.875rem', borderRadius: '8px', background: 'var(--bg3)', border: '1px solid var(--border)' }}>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ fontSize: '1.1rem' }}>{note.locked ? '🔒' : '📄'}</span>
-                      <div>
-                        <div style={{ fontSize: '0.88rem', fontWeight: '500', color: 'var(--text)' }}>{note.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>{note.path}</div>
-                      </div>
-                    </div>
-                    <div>
-                      {note.loading ? (
-                        <span className="spin"></span>
-                      ) : (
-                        <button
-                          className={`btn ${note.locked ? 'btn-ghost' : 'btn-primary'} btn-sm`}
-                          onClick={() => toggleLock(note)}
-                          disabled={togglingNote[note.path]}
-                          style={{ minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          {togglingNote[note.path] ? (
-                            <span className="spin"></span>
-                          ) : (
-                            note.locked ? 'Unlock Note' : 'Lock Note'
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {notes.length === 0 && (
-                  <div style={{ color: 'var(--text2)', textAlign: 'center', padding: '2rem' }}>No note files found.</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', padding: '1.25rem', borderRadius: '8px', background: 'var(--bg3)', border: '1px solid var(--border)' }}>
+                {notes.length === 0 ? (
+                  <div style={{ color: 'var(--text2)', textAlign: 'center', padding: '1.5rem' }}>No note files found in vault folder.</div>
+                ) : (
+                  renderTree(treeRoot)
                 )}
               </div>
             )}
