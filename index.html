@@ -1159,6 +1159,43 @@
     const enc = (s) => btoa(unescape(encodeURIComponent(s)));
     const dec = (b) => decodeURIComponent(escape(atob(b.replace(/\n/g, ''))));
 
+    const isFileLocked = (content) => {
+      const lines = content.replace(/\r/g, '').split('\n');
+      if (lines[0] === '---') {
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i].startsWith('locked:')) {
+            return lines[i].split(':')[1].trim() === 'true';
+          }
+          if (lines[i] === '---') break;
+        }
+      }
+      return false;
+    };
+
+    const setLocked = (content, isLocked) => {
+      const lines = content.replace(/\r/g, '').split('\n');
+      if (lines[0] === '---') {
+        let e = -1; let li = -1;
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i].startsWith('locked:')) li = i;
+          if (lines[i] === '---') { e = i; break; }
+        }
+        if (e !== -1) {
+          if (isLocked) {
+            if (li !== -1) lines[li] = `locked: true`;
+            else lines.splice(e, 0, `locked: true`);
+          } else {
+            if (li !== -1) lines.splice(li, 1);
+          }
+          return lines.join('\n');
+        }
+      }
+      if (isLocked) {
+        return `---\nlocked: true\n---\n${content}`;
+      }
+      return content;
+    };
+
     /* SECURE TOKEN DECRYPTION */
     // The token is encrypted with AES-GCM using the password as the key.
     // To change the token, generate a new encrypted payload and replace these values:
@@ -1276,6 +1313,7 @@
     /* SIDEBAR */
     const PAGES = [
       { id: 'folders', icon: '⠿', label: 'Folder Organizer', desc: 'Reorder homepage sections' },
+      { id: 'security', icon: '🔒', label: 'Archive Security', desc: 'Manage page locking' },
       { id: 'settings', icon: '⚙️', label: 'Settings', desc: 'Site configuration' },
     ];
     function Sidebar({ page, setPage }) {
@@ -1302,6 +1340,7 @@
     function Header({ page, dark, setDark, onLogout }) {
       const info = {
         folders: { t: 'Folder Organizer', s: 'Drag to reorder homepage sections' },
+        security: { t: 'Archive Security', s: 'Manage decryption password and page locks' },
         settings: { t: 'Settings', s: 'Configure site features' },
       };
       const { t, s } = info[page] || info.folders;
@@ -1866,6 +1905,204 @@
         </div>
       );
     }
+
+    /* ============ ARCHIVE SECURITY ============ */
+    function SecurityPage() {
+      const [notes, setNotes] = useState([]);
+      const [pwd, setPwd] = useState('');
+      const [pwdSha, setPwdSha] = useState('');
+      const [loadingPwd, setLoadingPwd] = useState(true);
+      const [loadingNotes, setLoadingNotes] = useState(true);
+      const [savingPwd, setSavingPwd] = useState(false);
+      const [togglingNote, setTogglingNote] = useState({});
+
+      useEffect(() => {
+        loadPwd();
+        loadNotesList();
+      }, []);
+
+      const loadPwd = async () => {
+        setLoadingPwd(true);
+        try {
+          const res = await gGet(QR, 'archive-config.json').catch(() => null);
+          if (res && res.content) {
+            const config = JSON.parse(dec(res.content));
+            setPwd(config.password || '');
+            setPwdSha(res.sha);
+          }
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setLoadingPwd(false);
+        }
+      };
+
+      const savePwd = async () => {
+        if (!pwd.trim()) {
+          toast.err('Password cannot be empty');
+          return;
+        }
+        setSavingPwd(true);
+        try {
+          const payload = JSON.stringify({ password: pwd }, null, 2);
+          let res;
+          if (pwdSha) {
+            res = await gPut(QR, 'archive-config.json', payload, pwdSha, '🔒 Update master password via Admin Dashboard');
+          } else {
+            res = await gCreate(QR, 'archive-config.json', payload, '🔒 Initialize master password via Admin Dashboard');
+          }
+          if (res && res.content) {
+            setPwdSha(res.content.sha);
+          }
+          toast.ok('Master password updated successfully!');
+        } catch (e) {
+          toast.err('Failed to save password: ' + e.message);
+        } finally {
+          setSavingPwd(false);
+        }
+      };
+
+      const loadNotesList = async () => {
+        setLoadingNotes(true);
+        try {
+          const treeData = await gh(`/repos/${CR.owner}/${CR.name}/git/trees/${CR.branch}?recursive=1`);
+          const mdFiles = treeData.tree
+            .filter(i => i.type === 'blob' && i.path.endsWith('.md') && !i.path.startsWith('.') && i.path !== 'index.md')
+            .map(i => ({
+              name: i.path.split('/').pop().replace('.md', ''),
+              path: i.path,
+              sha: i.sha,
+              locked: false,
+              loading: true
+            }));
+          setNotes(mdFiles);
+
+          // Batch load lock status
+          const fileData = {};
+          const batchSize = 5;
+          for (let i = 0; i < mdFiles.length; i += batchSize) {
+            const batch = mdFiles.slice(i, i + batchSize);
+            await Promise.all(batch.map(async (file) => {
+              try {
+                const res = await gGet(CR, file.path);
+                const content = dec(res.content);
+                const locked = isFileLocked(content);
+                fileData[file.path] = { sha: res.sha, content, locked };
+              } catch (e) {
+                console.error(e);
+              }
+            }));
+            setNotes(prev => prev.map(n => fileData[n.path] ? { ...n, locked: fileData[n.path].locked, loading: false } : n));
+          }
+          // Store fileData on window so toggleLock can access it
+          window._securityFileData = fileData;
+        } catch (e) {
+          toast.err('Failed to load notes: ' + e.message);
+        } finally {
+          setLoadingNotes(false);
+        }
+      };
+
+      const toggleLock = async (note) => {
+        const fileData = window._securityFileData || {};
+        const cached = fileData[note.path];
+        if (!cached) return;
+
+        setTogglingNote(prev => ({ ...prev, [note.path]: true }));
+        try {
+          const newLocked = !cached.locked;
+          const newContent = setLocked(cached.content, newLocked);
+          const res = await gPut(CR, note.path, newContent, cached.sha, `🔒 Toggle lock for ${note.name} via Admin Dashboard`);
+          
+          // Update cache
+          fileData[note.path] = {
+            sha: res.content.sha,
+            content: newContent,
+            locked: newLocked
+          };
+          window._securityFileData = fileData;
+
+          // Update state
+          setNotes(prev => prev.map(n => n.path === note.path ? { ...n, locked: newLocked, sha: res.content.sha } : n));
+          toast.ok(`${note.name} is now ${newLocked ? 'LOCKED' : 'UNLOCKED'}`);
+        } catch (e) {
+          toast.err('Toggle lock failed: ' + e.message);
+        } finally {
+          setTogglingNote(prev => ({ ...prev, [note.path]: false }));
+        }
+      };
+
+      if (loadingPwd && loadingNotes) {
+        return <div className="content"><div className="skel skel-card" style={{ height: '140px' }}></div><div className="skel skel-card" style={{ height: '300px' }}></div></div>;
+      }
+
+      return (
+        <div className="content">
+          <div className="settings-card">
+            <div className="settings-hdr">
+              <div>
+                <div className="settings-title">🔑 Master Encryption Password</div>
+                <div className="settings-sub font-sm">Updates <code>archive-config.json</code> in the Quartz repository</div>
+              </div>
+              <button className="btn btn-primary btn-sm" onClick={savePwd} disabled={savingPwd || loadingPwd}>
+                {savingPwd ? <span className="spin"></span> : 'Save Password'}
+              </button>
+            </div>
+            <div className="form-group" style={{ maxWidth: '400px', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <input
+                className="input"
+                type="password"
+                placeholder="Enter single master password"
+                value={pwd}
+                onChange={e => setPwd(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="settings-card">
+            <div className="settings-title" style={{ marginBottom: '1.25rem' }}>🔒 Research Notes Archives</div>
+            {loadingNotes ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}><span className="spin"></span> Loading note list...</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {notes.map(note => (
+                  <div key={note.path} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem 0.875rem', borderRadius: '8px', background: 'var(--bg3)', border: '1px solid var(--border)' }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <span style={{ fontSize: '1.1rem' }}>{note.locked ? '🔒' : '📄'}</span>
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: '500', color: 'var(--text)' }}>{note.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>{note.path}</div>
+                      </div>
+                    </div>
+                    <div>
+                      {note.loading ? (
+                        <span className="spin"></span>
+                      ) : (
+                        <button
+                          className={`btn ${note.locked ? 'btn-ghost' : 'btn-primary'} btn-sm`}
+                          onClick={() => toggleLock(note)}
+                          disabled={togglingNote[note.path]}
+                          style={{ minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          {togglingNote[note.path] ? (
+                            <span className="spin"></span>
+                          ) : (
+                            note.locked ? 'Unlock Note' : 'Lock Note'
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {notes.length === 0 && (
+                  <div style={{ color: 'var(--text2)', textAlign: 'center', padding: '2rem' }}>No note files found.</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
     /* ============ AUTH ============ */
 
 
@@ -1894,7 +2131,7 @@
       const handleLogout = () => { localStorage.removeItem('github_token'); setTok(''); setAuthed(false); };
 
       if (!authed) return <><AuthPage onAuth={handleAuth} /><Toasts /></>;
-      const VIEWS = { folders: FolderPage, settings: SettingsPage };
+      const VIEWS = { folders: FolderPage, security: SecurityPage, settings: SettingsPage };
       const View = VIEWS[page];
       return (
         <div className="app">
