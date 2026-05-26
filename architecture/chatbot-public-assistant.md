@@ -11,7 +11,13 @@ The public chatbot should answer questions about Safinat al-Najat notes in a gro
     {
       "title": "string",
       "slug": "string",
-      "content": "string"
+      "content": "string",
+      "images": [
+        {
+          "alt": "string",
+          "url": "string"
+        }
+      ]
     }
   ]
 }
@@ -27,4 +33,6 @@ The proxy streams Mistral chat-completion SSE chunks directly to the browser. Th
 - If context is partial, say what the notes appear to cover and name the limitation instead of using a rigid exact refusal.
 - If no relevant context is supplied, give a short site-scoped fallback and invite a more specific query.
 - Do not invent facts that are not supported by the retrieved site notes.
+- When relevant source notes contain images, include the supplied Markdown image in the answer instead of describing that an image exists.
 - Render bold Markdown as `<strong>` and strip stray unmatched `**` markers so users never see raw formatting tokens.
+- Render supplied Markdown images as safe `<img>` elements inside the chat bubble.

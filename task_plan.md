@@ -9,6 +9,13 @@
 - [x] Update client retrieval/parser helpers
 - [x] Run focused tests and compile checks
 
+### Chatbot + Admin Follow-Up Fixes (2026-05-26)
+- [x] Verify live worker prompt deployment state
+- [x] Add image-aware context extraction and image rendering in chat bubbles
+- [x] Make no-context answers conversational instead of hard-refusal shaped
+- [x] Make admin password changes affect production builds
+- [x] Verify locally and deploy worker if credentials allow
+
 ### Phase 1: Blueprint (Research & Alignment)
 - [x] Scan codebase and analyze existing component configurations (`quartz.layout.ts`, `package.json`)
 - [x] Define JSON Data schemas in `gemini.md`

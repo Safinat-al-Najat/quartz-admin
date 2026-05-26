@@ -55,10 +55,19 @@ Stored as: `iv:combined` (e.g. `e0f760...:dGhpcyBpcyBjb2...`) in the `data-paylo
     {
       "title": "string",
       "slug": "string",
-      "content": "string"
+      "content": "string",
+      "images": [
+        {
+          "alt": "string",
+          "url": "string"
+        }
+      ]
     }
   ]
 }
 ```
 
 Invariant: the public assistant must stay grounded in retrieved site notes, but retrieval and response style should tolerate minor spelling mismatches and partial context instead of refusing rigidly.
+
+## 6. Archive Password Source Rule
+Admin dashboard password changes update `archive-config.json` in the Quartz repository. The Quartz build must therefore read `archive-config.json` first and use `ARCHIVE_PASSWORD` only as a fallback, otherwise the admin panel can appear to save successfully while production keeps using an older GitHub Actions secret.

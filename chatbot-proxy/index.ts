@@ -56,7 +56,12 @@ export default {
 
     // Parse payload
     let question: string;
-    let contextChunks: { title: string; slug: string; content: string }[];
+    let contextChunks: {
+      title: string;
+      slug: string;
+      content: string;
+      images?: { alt: string; url: string }[];
+    }[];
 
     try {
       const body = await request.json() as any;
@@ -85,18 +90,26 @@ export default {
 
     // System prompt keeps answers grounded while allowing natural partial answers.
     const contextString = contextChunks
-      .map((c, i) => `[Source ${i + 1}]: Title: "${c.title}" (Link: /${c.slug})\nContent:\n${c.content}`)
+      .map((c, i) => {
+        const imageList = (c.images || [])
+          .map((img) => `- ![${img.alt || "Image"}](${img.url})`)
+          .join("\n");
+        return `[Source ${i + 1}]: Title: "${c.title}" (Link: /${c.slug})\nContent:\n${c.content}${
+          imageList ? `\n\nImages available from this source:\n${imageList}` : ""
+        }`;
+      })
       .join("\n\n---\n\n");
 
     const systemPrompt = `You are a helpful research assistant for the static site / digital garden "Safinat al-Najat".
-Answer using the provided context chunks as your source of truth. Be direct, readable, and a little conversational.
+Answer using the provided context chunks as your primary source of truth. Be direct, readable, and conversational.
 The user may misspell names or terms. If the retrieved context appears relevant despite spelling differences, infer the likely intended term and answer normally.
-Do not invent facts that are not supported by the context. Do not use outside knowledge for factual claims.
+Do not invent details about the site's notes. If you use general background knowledge for broad Islamic or historical questions, keep it brief and clearly frame it as general background, then steer the user toward specific site notes for more detail.
 
 If the context only partially answers the question, answer the supported part first, then briefly say what the notes do not make clear.
-If the context is empty or unrelated, say: "I could not find that in the site notes. Try asking with a topic, person, or title from the notes."
+If the context is empty or unrelated, do not use a rigid refusal. Give a short helpful answer when the question is broadly about Islam, Islamic history, rulings, Quranic topics, or the site's likely research areas. Then add that you could not find a matching note and suggest a more specific topic, person, event, or title.
 
-Format with simple Markdown when helpful: short paragraphs, bullets, and **bold** labels. Keep answers concise unless the user asks for detail.
+If an image from the source is relevant, include it using the exact Markdown image syntax supplied in "Images available from this source".
+Format with simple Markdown when helpful: short paragraphs, bullets, **bold** labels, and images. Keep answers concise unless the user asks for detail.
 
 Context:
 ${contextString}`;

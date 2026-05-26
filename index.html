@@ -1373,9 +1373,12 @@
         try {
           const token = await decryptToken(pwd);
           setTok(token);
-          // Verify token actually works
-          const r = await fetch(`${GAPI}/repos/${CR.owner}/${CR.name}`, { headers: { 'Authorization': `Bearer ${token}` } });
-          if (!r.ok) throw new Error('Could not access repository. Admin password might be wrong or token expired.');
+          // Verify token can access both repos used by the dashboard.
+          const verifyHeaders = { 'Authorization': `Bearer ${token}` };
+          const contentRepo = await fetch(`${GAPI}/repos/${CR.owner}/${CR.name}`, { headers: verifyHeaders });
+          if (!contentRepo.ok) throw new Error('Could not access the notes repository. Admin password might be wrong or token expired.');
+          const quartzRepo = await fetch(`${GAPI}/repos/${QR.owner}/${QR.name}`, { headers: verifyHeaders });
+          if (!quartzRepo.ok) throw new Error('Could not access the Quartz repository. The token must have access to save archive-config.json.');
           localStorage.setItem('admin_pwd', pwd); // Store password
           onAuth(token);
         } catch (e) { setPwd(''); setErr(e.message); }
@@ -1954,7 +1957,7 @@
           if (res && res.content) {
             setPwdSha(res.content.sha);
           }
-          toast.ok('Master password updated successfully!');
+          toast.ok('Master password updated. The next Quartz deployment will use this archive-config.json value.');
         } catch (e) {
           toast.err('Failed to save password: ' + e.message);
         } finally {
