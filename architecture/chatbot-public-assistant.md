@@ -40,5 +40,6 @@ The public content index should include an optional `images` array per note, ext
 - Never render model-invented image placeholders. Browser rendering must only allow image URLs that were extracted from matched site notes.
 - Render bold Markdown as `<strong>` and strip stray unmatched `**` markers so users never see raw formatting tokens.
 - Render supplied Markdown images as safe `<img>` elements inside the chat bubble.
+- Chat bubble images should open in a scoped full-screen lightbox on click and close on backdrop click, close button, or Escape.
 - Keep chat messages and expanded/collapsed window state in tab memory across Quartz SPA navigation. This state must clear naturally on full refresh or site close.
 - Provide a user-controlled expand/shrink button for the chat window without changing mobile full-screen behavior.
