@@ -2,6 +2,13 @@
 
 ## Phase Checklists
 
+### Chatbot Public Assistant Fix (2026-05-26)
+- [x] Document chatbot behavior rules in `architecture/chatbot-public-assistant.md`
+- [x] Add regression tests for typo-tolerant context retrieval and Markdown bold rendering
+- [x] Update worker model and assistant prompt to be less rigid while remaining grounded
+- [x] Update client retrieval/parser helpers
+- [x] Run focused tests and compile checks
+
 ### Phase 1: Blueprint (Research & Alignment)
 - [x] Scan codebase and analyze existing component configurations (`quartz.layout.ts`, `package.json`)
 - [x] Define JSON Data schemas in `gemini.md`
@@ -27,6 +34,11 @@
 - [ ] Integrate PasswordGate component in layout:
   - [ ] Export in `quartz/components/index.ts`
   - [ ] Register in `quartz.layout.ts` under global layout components
+- [x] Repair locked folder unlock behavior:
+  - [x] Ensure `/locked/` output always has encrypted payload and verification token
+  - [x] Auto-decrypt child locked pages from `sessionStorage.archive_session_key`
+  - [x] Remove duplicate decrypted titles from locked folder/file bodies
+  - [x] Add generated-output regression tests for payload, verification token, and content-index leakage
 
 ### Phase 4: Stylize (Refinement & UI Tuning)
 - [ ] Modify Admin Panel `index.html` to add "Archive Security" section:
@@ -40,6 +52,6 @@
   - [ ] Glassmorphic inputs and backdrops
 
 ### Phase 5: Trigger (Verification & Launch)
-- [ ] Run local build and verify compilation matches constraints
-- [ ] Validate search index leak protection: ensure compiled `static/contentIndex.json` contains no sensitive plaintext from locked notes
+- [x] Run local build and verify compilation matches constraints
+- [x] Validate search index leak protection: ensure compiled `static/contentIndex.json` contains no sensitive plaintext from locked notes
 - [ ] Verify deployment instructions

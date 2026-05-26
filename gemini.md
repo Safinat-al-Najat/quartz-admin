@@ -37,6 +37,8 @@ Stored as: `iv:combined` (e.g. `e0f760...:dGhpcyBpcyBjb2...`) in the `data-paylo
 - **Search Index Leak Trap**: Absolutely no plaintext of locked pages must exist in `content/` during the execution of `npx quartz build`. All locked pages must be replaced with the encrypted HTML container *before* compilation begins.
 - **Master Key Security**: The master password should be loaded from `process.env.ARCHIVE_PASSWORD` as the primary source of truth (suitable for GitHub Secrets). A local `archive-config.json` inside the git repository acts as a fallback for local testing.
 - **No Multiple Password Prompts**: Successful password verification must store the password securely in `sessionStorage` and automatically unlock any subsequent locked notes instantly.
+- **Locked Root Is Protected**: The locked folder gateway (`content/locked/index.md`) is encrypted like every other locked note. Generated `/locked/` output must contain both `#encrypted-container[data-payload]` and `#password-gate-container[data-verify]`.
+- **Single Visible Title**: Locked pages must render one visible page title. Decrypted payload HTML must not duplicate Quartz's `h1.article-title`.
 - **Double-Encrypt Prevention**: The pre-build pipeline must create `.bak` backup files for locked pages. If a `.bak` file already exists, it must not encrypt the file again (preventing data loss if a build crashes midway).
 - **Framework Limits**: No React state hooks (e.g., useState, useEffect) on the frontend. Use pure DOM manipulation in the `.inline.ts` file, attached to the Quartz component's `afterDOMLoaded` hook.
 
@@ -44,3 +46,19 @@ Stored as: `iv:combined` (e.g. `e0f760...:dGhpcyBpcyBjb2...`) in the `data-paylo
 - **Phase**: Blueprint (Phase 1)
 - **Status**: Planning (Awaiting user review and blueprint approval)
 - **Last Updated**: 2026-05-25
+
+## 5. Public Chatbot Schema
+```json
+{
+  "question": "string",
+  "contextChunks": [
+    {
+      "title": "string",
+      "slug": "string",
+      "content": "string"
+    }
+  ]
+}
+```
+
+Invariant: the public assistant must stay grounded in retrieved site notes, but retrieval and response style should tolerate minor spelling mismatches and partial context instead of refusing rigidly.

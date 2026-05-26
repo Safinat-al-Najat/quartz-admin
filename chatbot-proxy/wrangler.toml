@@ -1,0 +1,6 @@
+name = "safinat-chatbot-proxy"
+main = "index.ts"
+compatibility_date = "2024-03-01"
+
+[vars]
+MISTRAL_MODEL = "mistral-small-latest"

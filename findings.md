@@ -37,3 +37,8 @@
 ## Technical Constraints & API Limits
 - **GitHub API Rate Limits**: Since the admin panel is a client-side app, it is subject to GitHub API rate limits. Fetching all notes in one tree request is efficient. We will batch fetch note contents to check frontmatter states to avoid hitting rate limits.
 - **Node.js ESM vs CJS**: Quartz 4 is an ESM project (`"type": "module"` in `package.json`). Therefore, `encrypt-archive.js` should be written as an ES module or a standard JS script using `import` statements.
+
+## Locked Vault Bug Findings - 2026-05-26
+- Generated `public/locked/index.html` can contain `#password-gate-container` without `#encrypted-container`, which makes the unlock form appear but gives the runtime no payload to reveal.
+- Folder pages combine Quartz `ArticleTitle` rendering with folder/page body content. Decrypted HTML must remove a duplicate leading `h1` when the title is already represented by `.article-title`.
+- The valid-session path must remove a dead gate on locked pages that lack a payload; otherwise users can be prompted again even though `sessionStorage.archive_session_key` is valid.
