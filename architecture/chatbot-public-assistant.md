@@ -26,6 +26,9 @@ The public chatbot should answer questions about Safinat al-Najat notes in a gro
 ## Output Schema
 The proxy streams Mistral chat-completion SSE chunks directly to the browser. The browser incrementally converts supported Markdown to safe HTML.
 
+## Content Index Image Metadata
+The public content index should include an optional `images` array per note, extracted from rendered `<img>` nodes during build. The browser may also scan legacy raw Markdown image syntax from `content`, but build-time image metadata is the reliable source because Quartz text extraction can remove Markdown image syntax.
+
 ## Behavioral Rules
 - Use `mistral-small-latest` unless an environment override intentionally changes `MISTRAL_MODEL`.
 - Answer directly when the provided context clearly supports the answer.
@@ -34,5 +37,8 @@ The proxy streams Mistral chat-completion SSE chunks directly to the browser. Th
 - If no relevant context is supplied, give a short site-scoped fallback and invite a more specific query.
 - Do not invent facts that are not supported by the retrieved site notes.
 - When relevant source notes contain images, include the supplied Markdown image in the answer instead of describing that an image exists.
+- Never render model-invented image placeholders. Browser rendering must only allow image URLs that were extracted from matched site notes.
 - Render bold Markdown as `<strong>` and strip stray unmatched `**` markers so users never see raw formatting tokens.
 - Render supplied Markdown images as safe `<img>` elements inside the chat bubble.
+- Keep chat messages and expanded/collapsed window state in tab memory across Quartz SPA navigation. This state must clear naturally on full refresh or site close.
+- Provide a user-controlled expand/shrink button for the chat window without changing mobile full-screen behavior.

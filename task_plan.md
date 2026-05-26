@@ -12,6 +12,9 @@
 ### Chatbot + Admin Follow-Up Fixes (2026-05-26)
 - [x] Verify live worker prompt deployment state
 - [x] Add image-aware context extraction and image rendering in chat bubbles
+- [x] Restrict chat image rendering to actual matched vault image URLs
+- [x] Add chat window expand/shrink control
+- [x] Preserve chat messages across Quartz SPA navigation until refresh/close
 - [x] Make no-context answers conversational instead of hard-refusal shaped
 - [x] Make admin password changes affect production builds
 - [x] Verify locally and deploy worker if credentials allow

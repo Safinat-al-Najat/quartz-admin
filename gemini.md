@@ -67,7 +67,7 @@ Stored as: `iv:combined` (e.g. `e0f760...:dGhpcyBpcyBjb2...`) in the `data-paylo
 }
 ```
 
-Invariant: the public assistant must stay grounded in retrieved site notes, but retrieval and response style should tolerate minor spelling mismatches and partial context instead of refusing rigidly.
+Invariant: the public assistant must stay grounded in retrieved site notes, but retrieval and response style should tolerate minor spelling mismatches and partial context instead of refusing rigidly. Chat image rendering is allowlisted to image URLs extracted from matched site notes; invented image placeholders must be stripped. Chat messages and expanded/collapsed state persist only in the current tab runtime so they survive SPA navigation but clear on refresh or site close.
 
 ## 6. Archive Password Source Rule
 Admin dashboard password changes update `archive-config.json` in the Quartz repository. The Quartz build must therefore read `archive-config.json` first and use `ARCHIVE_PASSWORD` only as a fallback, otherwise the admin panel can appear to save successfully while production keeps using an older GitHub Actions secret.
