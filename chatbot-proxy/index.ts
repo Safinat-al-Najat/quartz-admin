@@ -62,11 +62,25 @@ export default {
       content: string;
       images?: { alt: string; url: string }[];
     }[];
+    let conversationHistory: { role: "user" | "assistant"; content: string }[] = [];
 
     try {
       const body = await request.json() as any;
       question = body.question;
       contextChunks = body.contextChunks;
+      conversationHistory = Array.isArray(body.conversationHistory)
+        ? body.conversationHistory
+            .filter((turn: any) =>
+              (turn?.role === "user" || turn?.role === "assistant") &&
+              typeof turn?.content === "string" &&
+              turn.content.trim().length > 0
+            )
+            .slice(-10)
+            .map((turn: any) => ({
+              role: turn.role,
+              content: turn.content.trim().slice(0, 4000),
+            }))
+        : [];
 
       if (!question || !Array.isArray(contextChunks)) {
         return new Response("Bad Request: 'question' and 'contextChunks' array are required", {
@@ -110,9 +124,22 @@ If the context is empty or unrelated, do not use a rigid refusal. Give a short h
 
 If an image from the source is relevant, include it using only the exact Markdown image syntax supplied in "Images available from this source". Never invent image URLs, alt text placeholders, or "replace this URL" image markdown.
 Format with simple Markdown when helpful: short paragraphs, bullets, **bold** labels, and images. Keep answers concise unless the user asks for detail.
+Use the recent conversation history to understand same-session follow-ups, especially when the user answers a question you just asked. If the latest user message conflicts with older history, follow the latest message.
 
 Context:
 ${contextString}`;
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory,
+    ];
+
+    if (
+      messages[messages.length - 1]?.role !== "user" ||
+      messages[messages.length - 1]?.content !== question
+    ) {
+      messages.push({ role: "user", content: question });
+    }
 
     try {
       const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
@@ -123,10 +150,7 @@ ${contextString}`;
         },
         body: JSON.stringify({
           model: env.MISTRAL_MODEL || "mistral-small-latest",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: question },
-          ],
+          messages,
           stream: true,
         }),
       });

@@ -7,6 +7,12 @@ The public chatbot should answer questions about Safinat al-Najat notes in a gro
 ```json
 {
   "question": "string",
+  "conversationHistory": [
+    {
+      "role": "user | assistant",
+      "content": "string"
+    }
+  ],
   "contextChunks": [
     {
       "title": "string",
@@ -42,4 +48,6 @@ The public content index should include an optional `images` array per note, ext
 - Render supplied Markdown images as safe `<img>` elements inside the chat bubble.
 - Chat bubble images should open in a scoped full-screen lightbox on click and close on backdrop click, close button, or Escape.
 - Keep chat messages and expanded/collapsed window state in tab memory across Quartz SPA navigation. This state must clear naturally on full refresh or site close.
+- Send recent user and assistant turns with each request so follow-up replies in the same open tab preserve conversational context. Limit history to recent turns to control payload size.
+- Use recent user turns together with the current question for local context retrieval, so short follow-ups can still find the note context from the earlier question.
 - Provide a user-controlled expand/shrink button for the chat window without changing mobile full-screen behavior.
