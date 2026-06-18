@@ -12,6 +12,9 @@ Locked Quartz content under `content/locked/` must be protected during static bu
 - Before `npx quartz build`, every locked Markdown file, including `content/locked/index.md`, is temporarily replaced with an encrypted placeholder.
 - Each locked placeholder must contain `#encrypted-container[data-payload]`.
 - Each locked output page must contain `#password-gate-container[data-verify]` with a non-empty verification token.
+- Locked-page Obsidian image embeds must resolve to real files under `content/`. If an embed cannot be resolved, the build must fail with the note path and missing asset name instead of emitting broken image URLs.
+- Vault attachment folders, including `PNGS/`, must be present under `content/` so Quartz's asset emitter copies them into `public/`.
+- Register each Quartz asset/static emitter only once. Duplicate `Plugin.Assets()` or `Plugin.Static()` registrations can copy the same files concurrently and fail on Windows with `EBUSY`.
 - After the build, plaintext files must be restored from `.quartz-cache/backups`.
 - Locked plaintext must not appear in `public/static/contentIndex.json`.
 

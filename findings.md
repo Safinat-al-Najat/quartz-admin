@@ -42,3 +42,8 @@
 - Generated `public/locked/index.html` can contain `#password-gate-container` without `#encrypted-container`, which makes the unlock form appear but gives the runtime no payload to reveal.
 - Folder pages combine Quartz `ArticleTitle` rendering with folder/page body content. Decrypted HTML must remove a duplicate leading `h1` when the title is already represented by `.article-title`.
 - The valid-session path must remove a dead gate on locked pages that lack a payload; otherwise users can be prompted again even though `sessionStorage.archive_session_key` is valid.
+
+## Locked Image Asset Findings - 2026-05-31
+- Broken locked-page images were caused by vault attachment files being absent from `quartz-repo/content/`. Bare Obsidian embeds such as `![[image-105.webp|418x601]]` therefore fell back to root-relative output like `/quartz/image-105.webp`, which did not exist in `public/`.
+- The actual source files existed in `.tmp/vault-inspect/PNGS/pngs/`. Copying the attachment tree into `content/PNGS/` lets the build resolver map bare embeds to `PNGS/pngs/image-105.webp`, and Quartz emits them to `public/PNGS/pngs/`.
+- `quartz.config.ts` had duplicate `Plugin.Assets()` and `Plugin.Static()` emitters. Once many attachment files were added, Windows could fail the build with `EBUSY` because the same asset was copied twice concurrently.
