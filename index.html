@@ -7,7 +7,6 @@
   <title>Safinat al-Najat — Admin</title>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap"
     rel="stylesheet">
@@ -1137,1029 +1136,1515 @@
 
 <body>
   <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
-    const GAPI = 'https://api.github.com';
-    const CR = { owner: 'Safinat-al-Najat', name: 'safinat-al-najat.github.io', branch: 'main' };
-    const QR = { owner: 'Safinat-al-Najat', name: 'quartz', branch: 'v4' };
-    const CATS = [
-      { id: 'merits', name: 'MERITS', icon: '🌟', path: 'MERITS', slug: 'MERITS', display: 'Merits', desc: 'Virtues of the Ahlulbayt & companions' },
-      { id: 'history', name: 'MAJOR HISTORICAL EVENTS', icon: '📜', path: 'MAJOR HISTORICAL EVENTS', slug: 'MAJOR%20HISTORICAL%20EVENTS', display: 'History', desc: 'Key events in Islamic history' },
-      { id: 'rulings', name: 'RULINGS OF ISLAM', icon: '⚖️', path: 'RULINGS OF ISLAM', slug: 'RULINGS%20OF%20ISLAM', display: 'Rulings', desc: 'Fiqh, obligations & Islamic law' },
-    ];
-    const TOGGLES = [
-      { key: 'Explorer', label: 'Explorer Sidebar', icon: '🗂️', desc: 'Folder tree sidebar navigation', comp: 'Component.Explorer()' },
-      { key: 'RecentNotes', label: 'Recent Notes', icon: '🕐', desc: 'Recently updated notes widget', comp: 'Component.RecentNotes' },
-      { key: 'Backlinks', label: 'Backlinks', icon: '🔗', desc: 'Pages linking to current page', comp: 'Component.Backlinks()' },
-      { key: 'TableOfContents', label: 'Table of Contents', icon: '📋', desc: 'Auto-generated content outline', comp: 'Component.TableOfContents()' },
-      { key: 'Breadcrumbs', label: 'Breadcrumbs', icon: '🍞', desc: 'Navigation path indicator', comp: 'Component.Breadcrumbs()' },
-    ];
-    let _tok = '';
-    const setTok = (t) => { _tok = t; };
-    const enc = (s) => btoa(unescape(encodeURIComponent(s)));
-    const dec = (b) => decodeURIComponent(escape(atob(b.replace(/\n/g, ''))));
-
-    const isFileLocked = (content) => {
-      const lines = content.replace(/\r/g, '').split('\n');
-      if (lines[0] === '---') {
-        for (let i = 1; i < lines.length; i++) {
-          if (lines[i].startsWith('locked:')) {
-            return lines[i].split(':')[1].trim() === 'true';
+  <script>
+const {
+  useState,
+  useEffect,
+  useRef
+} = React;
+const GAPI = 'https://api.github.com';
+const CR = {
+  owner: 'Safinat-al-Najat',
+  name: 'safinat-al-najat.github.io',
+  branch: 'main'
+};
+const QR = {
+  owner: 'Safinat-al-Najat',
+  name: 'quartz',
+  branch: 'v4'
+};
+const CATS = [{
+  id: 'merits',
+  name: 'MERITS',
+  icon: '🌟',
+  path: 'MERITS',
+  slug: 'MERITS',
+  display: 'Merits',
+  desc: 'Virtues of the Ahlulbayt & companions'
+}, {
+  id: 'history',
+  name: 'MAJOR HISTORICAL EVENTS',
+  icon: '📜',
+  path: 'MAJOR HISTORICAL EVENTS',
+  slug: 'MAJOR%20HISTORICAL%20EVENTS',
+  display: 'History',
+  desc: 'Key events in Islamic history'
+}, {
+  id: 'rulings',
+  name: 'RULINGS OF ISLAM',
+  icon: '⚖️',
+  path: 'RULINGS OF ISLAM',
+  slug: 'RULINGS%20OF%20ISLAM',
+  display: 'Rulings',
+  desc: 'Fiqh, obligations & Islamic law'
+}];
+const TOGGLES = [{
+  key: 'Explorer',
+  label: 'Explorer Sidebar',
+  icon: '🗂️',
+  desc: 'Folder tree sidebar navigation',
+  comp: 'Component.Explorer()'
+}, {
+  key: 'RecentNotes',
+  label: 'Recent Notes',
+  icon: '🕐',
+  desc: 'Recently updated notes widget',
+  comp: 'Component.RecentNotes'
+}, {
+  key: 'Backlinks',
+  label: 'Backlinks',
+  icon: '🔗',
+  desc: 'Pages linking to current page',
+  comp: 'Component.Backlinks()'
+}, {
+  key: 'TableOfContents',
+  label: 'Table of Contents',
+  icon: '📋',
+  desc: 'Auto-generated content outline',
+  comp: 'Component.TableOfContents()'
+}, {
+  key: 'Breadcrumbs',
+  label: 'Breadcrumbs',
+  icon: '🍞',
+  desc: 'Navigation path indicator',
+  comp: 'Component.Breadcrumbs()'
+}];
+let _tok = '';
+const setTok = t => {
+  _tok = t;
+};
+const enc = s => btoa(unescape(encodeURIComponent(s)));
+const dec = b => decodeURIComponent(escape(atob(b.replace(/\n/g, ''))));
+const isFileLocked = content => {
+  const lines = content.replace(/\r/g, '').split('\n');
+  if (lines[0] === '---') {
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].startsWith('locked:')) {
+        return lines[i].split(':')[1].trim() === 'true';
+      }
+      if (lines[i] === '---') break;
+    }
+  }
+  return false;
+};
+const setLocked = (content, isLocked) => {
+  const lines = content.replace(/\r/g, '').split('\n');
+  if (lines[0] === '---') {
+    let e = -1;
+    let li = -1;
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].startsWith('locked:')) li = i;
+      if (lines[i] === '---') {
+        e = i;
+        break;
+      }
+    }
+    if (e !== -1) {
+      if (isLocked) {
+        if (li !== -1) lines[li] = `locked: true`;else lines.splice(e, 0, `locked: true`);
+      } else {
+        if (li !== -1) lines.splice(li, 1);
+      }
+      return lines.join('\n');
+    }
+  }
+  if (isLocked) {
+    return `---\nlocked: true\n---\n${content}`;
+  }
+  return content;
+};
+const ENCRYPTED_TOKEN = "C2LuIMoWkHFX4i0XzsJzPbpCp7B0jLBQ4hSZOZmxRDX66rQBfaEh3v8XnEK6F0U7Qam/+xv3y1E=";
+const SALT = "salty_safinat";
+const IV = new Uint8Array([11, 22, 33, 44, 55, 66, 77, 88, 99, 10, 11, 12]);
+async function decryptToken(password) {
+  try {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), {
+      name: "PBKDF2"
+    }, false, ["deriveBits", "deriveKey"]);
+    const key = await crypto.subtle.deriveKey({
+      name: "PBKDF2",
+      salt: enc.encode(SALT),
+      iterations: 100000,
+      hash: "SHA-256"
+    }, keyMaterial, {
+      name: "AES-GCM",
+      length: 256
+    }, false, ["decrypt"]);
+    const binary = atob(ENCRYPTED_TOKEN);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const decryptedOutput = await crypto.subtle.decrypt({
+      name: "AES-GCM",
+      iv: IV
+    }, key, bytes);
+    return new TextDecoder().decode(decryptedOutput);
+  } catch (e) {
+    throw new Error("Incorrect password");
+  }
+}
+const epath = (r, p) => `/repos/${r.owner}/${r.name}/contents/${encodeURIComponent(p).replace(/%2F/g, '/')}`;
+async function gh(ep, opts = {}) {
+  const r = await fetch(GAPI + ep, {
+    ...opts,
+    headers: {
+      'Authorization': `Bearer ${_tok}`,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
+    }
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.message || `HTTP ${r.status}`);
+  }
+  return r.json();
+}
+const gGet = (r, p) => gh(epath(r, p) + `?ref=${r.branch}`);
+const gPut = (r, p, content, sha, msg) => gh(epath(r, p), {
+  method: 'PUT',
+  body: JSON.stringify({
+    message: msg,
+    content: enc(content),
+    sha,
+    branch: r.branch
+  })
+});
+const gCreate = (r, p, content, msg) => gh(epath(r, p), {
+  method: 'PUT',
+  body: JSON.stringify({
+    message: msg,
+    content: enc(content),
+    branch: r.branch
+  })
+});
+const gDel = (r, p, sha, msg) => gh(epath(r, p), {
+  method: 'DELETE',
+  body: JSON.stringify({
+    message: msg,
+    sha,
+    branch: r.branch
+  })
+});
+const gList = (r, p) => gh(epath(r, p) + `?ref=${r.branch}`);
+const extractWeight = content => {
+  if (!content) return 999;
+  const match = content.match(/weight:\s*(\d+)/);
+  return match ? parseInt(match[1], 10) : 999;
+};
+async function getTree(p, repo = CR) {
+  const data = await gList(repo, p);
+  const filesList = data.filter(i => i.type === 'file' && i.name.endsWith('.md') && i.name !== 'index.md');
+  const dirsList = data.filter(i => i.type === 'dir');
+  const files = await Promise.all(filesList.map(async f => {
+    let weight = 999;
+    try {
+      const fileRes = await gGet(repo, f.path);
+      weight = extractWeight(dec(fileRes.content));
+    } catch (e) {}
+    return {
+      name: f.name,
+      path: f.path,
+      sha: f.sha,
+      type: 'file',
+      weight
+    };
+  }));
+  const folders = await Promise.all(dirsList.map(async d => {
+    let weight = 999;
+    try {
+      const idxRes = await gGet(repo, `${d.path}/index.md`);
+      weight = extractWeight(dec(idxRes.content));
+    } catch (e) {}
+    return {
+      name: d.name,
+      path: d.path,
+      type: 'dir',
+      weight,
+      ...(await getTree(d.path, repo))
+    };
+  }));
+  const sorter = (a, b) => {
+    if (a.weight !== b.weight) return a.weight - b.weight;
+    return a.name.localeCompare(b.name, undefined, {
+      numeric: true,
+      sensitivity: 'base'
+    });
+  };
+  files.sort(sorter);
+  folders.sort(sorter);
+  return {
+    files,
+    folders
+  };
+}
+const countF = s => s.files.length + s.folders.reduce((a, f) => a + countF(f), 0);
+let _toast = null;
+const toast = {
+  ok: m => _toast?.('ok', m),
+  err: m => _toast?.('err', m),
+  info: m => _toast?.('info', m)
+};
+function Toasts() {
+  const [list, setList] = useState([]);
+  useEffect(() => {
+    _toast = (type, text) => {
+      const id = Date.now();
+      setList(p => [...p, {
+        id,
+        type,
+        text
+      }]);
+      setTimeout(() => setList(p => p.filter(t => t.id !== id)), 4000);
+    };
+    return () => {
+      _toast = null;
+    };
+  }, []);
+  const ico = {
+    ok: '✅',
+    err: '❌',
+    info: 'ℹ️'
+  };
+  return React.createElement("div", {
+    className: "toast-wrap"
+  }, list.map(t => React.createElement("div", {
+    key: t.id,
+    className: "toast"
+  }, React.createElement("span", null, ico[t.type]), React.createElement("span", null, t.text))));
+}
+function Modal({
+  title,
+  children,
+  onClose,
+  footer
+}) {
+  return React.createElement("div", {
+    className: "overlay",
+    onClick: onClose
+  }, React.createElement("div", {
+    className: "modal",
+    onClick: e => e.stopPropagation()
+  }, React.createElement("div", {
+    className: "modal-hdr"
+  }, React.createElement("h3", null, title), React.createElement("button", {
+    className: "btn-icon",
+    onClick: onClose
+  }, "\u2715")), React.createElement("div", {
+    className: "modal-body"
+  }, children), footer && React.createElement("div", {
+    className: "modal-foot"
+  }, footer)));
+}
+const PAGES = [{
+  id: 'folders',
+  icon: '⠿',
+  label: 'Folder Organizer',
+  desc: 'Reorder homepage sections'
+}, {
+  id: 'security',
+  icon: '🔒',
+  label: 'Archive Security',
+  desc: 'Manage page locking'
+}, {
+  id: 'settings',
+  icon: '⚙️',
+  label: 'Settings',
+  desc: 'Site configuration'
+}];
+function Sidebar({
+  page,
+  setPage
+}) {
+  return React.createElement("div", {
+    className: "sidebar"
+  }, React.createElement("div", {
+    className: "sb-brand"
+  }, React.createElement("div", {
+    className: "sb-icon"
+  }, "\u0633"), React.createElement("div", null, React.createElement("div", {
+    className: "sb-name"
+  }, "Safinat al-Najat"), React.createElement("div", {
+    className: "sb-sub"
+  }, "Admin Dashboard"))), React.createElement("nav", {
+    className: "sb-nav"
+  }, PAGES.map(p => React.createElement("button", {
+    key: p.id,
+    className: `nav-btn ${page === p.id ? 'active' : ''}`,
+    onClick: () => setPage(p.id)
+  }, React.createElement("span", {
+    className: "nav-icon"
+  }, p.icon), React.createElement("span", null, React.createElement("span", {
+    className: "nav-lbl"
+  }, p.label), React.createElement("span", {
+    className: "nav-desc"
+  }, p.desc))))), React.createElement("div", {
+    className: "sb-foot"
+  }, React.createElement("div", {
+    className: "connected-dot"
+  }, React.createElement("div", {
+    className: "dot"
+  }), React.createElement("span", null, "Connected to GitHub"))));
+}
+function Header({
+  page,
+  dark,
+  setDark,
+  onLogout
+}) {
+  const info = {
+    folders: {
+      t: 'Folder Organizer',
+      s: 'Drag to reorder homepage sections'
+    },
+    security: {
+      t: 'Archive Security',
+      s: 'Manage decryption password and page locks'
+    },
+    settings: {
+      t: 'Settings',
+      s: 'Configure site features'
+    }
+  };
+  const {
+    t,
+    s
+  } = info[page] || info.folders;
+  return React.createElement("div", {
+    className: "hdr"
+  }, React.createElement("div", {
+    className: "hdr-left"
+  }, React.createElement("h1", null, t), React.createElement("p", null, s)), React.createElement("div", {
+    className: "hdr-right"
+  }, React.createElement("button", {
+    className: "btn-icon",
+    onClick: () => setDark(d => !d),
+    title: "Toggle dark mode"
+  }, dark ? '☀️' : '🌙'), React.createElement("button", {
+    className: "btn btn-ghost btn-sm",
+    onClick: onLogout
+  }, "\uD83D\uDD11 Change Token")));
+}
+function AuthPage({
+  onAuth
+}) {
+  const [pwd, setPwd] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+  const needsSetup = ENCRYPTED_TOKEN.includes('replace this');
+  const [setupTok, setSetupTok] = useState('');
+  const [setupPwd, setSetupPwd] = useState('');
+  const [generatedCode, setGeneratedCode] = useState('');
+  const submit = async () => {
+    if (!pwd.trim()) return;
+    setLoading(true);
+    setErr('');
+    try {
+      const token = await decryptToken(pwd);
+      setTok(token);
+      const verifyHeaders = {
+        'Authorization': `Bearer ${token}`
+      };
+      const contentRepo = await fetch(`${GAPI}/repos/${CR.owner}/${CR.name}`, {
+        headers: verifyHeaders
+      });
+      if (!contentRepo.ok) throw new Error('Could not access the notes repository. Admin password might be wrong or token expired.');
+      const quartzRepo = await fetch(`${GAPI}/repos/${QR.owner}/${QR.name}`, {
+        headers: verifyHeaders
+      });
+      if (!quartzRepo.ok) throw new Error('Could not access the Quartz repository. The token must have access to save archive-config.json.');
+      localStorage.setItem('admin_pwd', pwd);
+      onAuth(token);
+    } catch (e) {
+      setPwd('');
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const generateEncryptedToken = async () => {
+    if (!setupTok || !setupPwd) return;
+    setLoading(true);
+    try {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(setupPwd), {
+        name: "PBKDF2"
+      }, false, ["deriveBits", "deriveKey"]);
+      const key = await crypto.subtle.deriveKey({
+        name: "PBKDF2",
+        salt: enc.encode(SALT),
+        iterations: 100000,
+        hash: "SHA-256"
+      }, keyMaterial, {
+        name: "AES-GCM",
+        length: 256
+      }, false, ["encrypt"]);
+      const encrypted = await crypto.subtle.encrypt({
+        name: "AES-GCM",
+        iv: IV
+      }, key, enc.encode(setupTok));
+      const bytes = new Uint8Array(encrypted);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
+      setGeneratedCode(`const ENCRYPTED_TOKEN = "${base64}";`);
+    } catch (e) {
+      setErr('Encryption failed: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (!needsSetup) {
+      const saved = localStorage.getItem('admin_pwd');
+      if (saved) {
+        setPwd(saved);
+        setTimeout(submit, 100);
+      }
+    }
+  }, [needsSetup]);
+  if (needsSetup) {
+    return React.createElement("div", {
+      className: "auth-page"
+    }, React.createElement("div", {
+      className: "auth-card",
+      style: {
+        maxWidth: '550px'
+      }
+    }, React.createElement("div", {
+      className: "auth-top"
+    }, React.createElement("h2", null, "Initial Security Setup"), React.createElement("p", null, "Convert your GitHub token into a secure, password-protected format.")), err && React.createElement("div", {
+      className: "alert alert-error"
+    }, err), !generatedCode ? React.createElement(React.Fragment, null, React.createElement("div", {
+      className: "form-group"
+    }, React.createElement("label", null, "Your GitHub Token (ghp_...)"), React.createElement("input", {
+      className: "input",
+      type: "password",
+      value: setupTok,
+      onChange: e => setSetupTok(e.target.value)
+    })), React.createElement("div", {
+      className: "form-group"
+    }, React.createElement("label", null, "Create an Admin Password"), React.createElement("input", {
+      className: "input",
+      type: "password",
+      value: setupPwd,
+      onChange: e => setSetupPwd(e.target.value)
+    }), React.createElement("small", null, "You will use this password to log in instead of the token.")), React.createElement("button", {
+      className: "btn btn-primary btn-full",
+      onClick: generateEncryptedToken,
+      disabled: loading || !setupTok || !setupPwd
+    }, loading ? React.createElement("span", {
+      className: "spin"
+    }) : '🔒', " Encrypt Token")) : React.createElement("div", {
+      className: "auth-hints",
+      style: {
+        marginTop: 0
+      }
+    }, React.createElement("strong", {
+      style: {
+        color: 'var(--ok-text)',
+        fontSize: '1rem'
+      }
+    }, "\u2705 Success! Complete setup:"), React.createElement("p", {
+      style: {
+        marginBottom: '1rem'
+      }
+    }, "Copy the code below, open ", React.createElement("code", null, "index.html"), " in your editor, and replace line 200 with this code, then commit to GitHub."), React.createElement("pre", {
+      style: {
+        background: 'var(--bg)',
+        padding: '1rem',
+        borderRadius: '6px',
+        overflowX: 'auto',
+        border: '1px solid var(--border)',
+        userSelect: 'all',
+        fontFamily: 'monospace',
+        fontSize: '.85rem',
+        color: 'var(--accent)'
+      }
+    }, generatedCode))));
+  }
+  return React.createElement("div", {
+    className: "auth-page"
+  }, React.createElement("div", {
+    className: "auth-card"
+  }, React.createElement("div", {
+    className: "auth-top"
+  }, React.createElement("span", {
+    className: "auth-arabic"
+  }, "\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u0651\u0670\u0647\u0650"), React.createElement("h2", null, "Safinat al-Najat Admin"), React.createElement("p", null, "Enter the admin password to access the dashboard")), err && React.createElement("div", {
+    className: "alert alert-error"
+  }, err), React.createElement("div", {
+    className: "form-group"
+  }, React.createElement("label", null, "Admin Password"), React.createElement("input", {
+    className: "input",
+    type: "password",
+    placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    value: pwd,
+    onChange: e => setPwd(e.target.value),
+    onKeyDown: e => e.key === 'Enter' && submit(),
+    autoFocus: true
+  })), React.createElement("button", {
+    className: "btn btn-primary btn-full",
+    onClick: submit,
+    disabled: loading || !pwd
+  }, loading ? React.createElement("span", {
+    className: "spin"
+  }) : '→', " Login")));
+}
+function FolderPage() {
+  const [folders, setFolders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [changed, setChanged] = useState(false);
+  const [exp, setExp] = useState({});
+  const [dragOver, setDragOver] = useState(null);
+  const [innerDragOver, setInnerDragOver] = useState(null);
+  const [dirtyDirs, setDirtyDirs] = useState(new Set());
+  const dragCtx = useRef(null);
+  useEffect(() => {
+    load();
+  }, []);
+  const load = async () => {
+    setLoading(true);
+    setDirtyDirs(new Set());
+    setChanged(false);
+    try {
+      const rootData = await gList(CR, '');
+      const rootDirs = rootData.filter(i => i.type === 'dir' && !i.name.startsWith('.') && i.name !== 'quartz' && i.name.toLowerCase() !== 'pngs' && i.name.toLowerCase() !== 'png');
+      let indexContent = '';
+      try {
+        const f = await gGet(CR, 'index.md');
+        indexContent = dec(f.content);
+      } catch (e) {}
+      const extractSection = path => {
+        const searchSlugs = [path, encodeURIComponent(path), path.replace(/ /g, '%20')];
+        for (let s of searchSlugs) {
+          const escapedSlug = s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const re = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[^\\n]*(?:\\n[^\\n]*)*`, 'i');
+          const m = indexContent.match(re);
+          if (m) {
+            let extracted = m[0];
+            const footerIdx = extracted.toLowerCase().indexOf('for any queries');
+            if (footerIdx !== -1) {
+              extracted = extracted.substring(0, footerIdx);
+            }
+            return extracted.trim();
           }
-          if (lines[i] === '---') break;
         }
+        return '';
+      };
+      const all = await Promise.all(rootDirs.map(async d => {
+        let block = extractSection(d.path);
+        let icon = '📁',
+          display = d.name,
+          desc = '';
+        if (block) {
+          const mdDesc = block.split('\n').slice(1).join('\n').trim();
+          desc = mdDesc || desc;
+          const m2 = block.match(/## \[\s*([^\]]+)\s*\]/);
+          if (m2) {
+            const parts = m2[1].split(' ');
+            if (parts.length > 1) {
+              icon = parts[0];
+              display = parts.slice(1).join(' ');
+            } else {
+              icon = '';
+              display = parts[0];
+            }
+          }
+        }
+        const existingCat = CATS.find(c => c.path === d.path);
+        const catData = {
+          id: existingCat?.id || d.name.toLowerCase().replace(/\s+/g, '-'),
+          name: d.name.toUpperCase(),
+          icon: block ? icon : existingCat?.icon || '📁',
+          path: d.path,
+          slug: encodeURIComponent(d.name),
+          display: block ? display : existingCat?.display || d.name,
+          desc: block ? desc : existingCat?.desc || desc,
+          rawBlock: block ? block.replace(/[-\s]+$/, '').trim() : ''
+        };
+        try {
+          const s = await getTree(catData.path);
+          return {
+            ...catData,
+            count: countF(s),
+            structure: s
+          };
+        } catch (e) {
+          return {
+            ...catData,
+            count: 0,
+            structure: {
+              files: [],
+              folders: []
+            }
+          };
+        }
+      }));
+      setFolders(all);
+    } catch (e) {
+      toast.err('Load failed: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const cloneStructure = s => ({
+    files: [...s.files],
+    folders: s.folders.map(f => ({
+      ...f,
+      ...cloneStructure(f)
+    }))
+  });
+  const reorderInStructure = (structure, parentPath, fromIdx, toIdx) => {
+    const s = cloneStructure(structure);
+    const doReorder = (node, target) => {
+      if (target === null) {
+        const combined = [...node.folders, ...node.files];
+        const [moved] = combined.splice(fromIdx, 1);
+        combined.splice(toIdx, 0, moved);
+        node.folders = combined.filter(i => i.type === 'dir');
+        node.files = combined.filter(i => i.type === 'file');
+        return true;
+      }
+      for (let sub of node.folders) {
+        if (sub.path === target) {
+          const combined = [...sub.folders, ...sub.files];
+          const [moved] = combined.splice(fromIdx, 1);
+          combined.splice(toIdx, 0, moved);
+          sub.folders = combined.filter(i => i.type === 'dir');
+          sub.files = combined.filter(i => i.type === 'file');
+          return true;
+        }
+        if (doReorder(sub, target)) return true;
       }
       return false;
     };
-
-    const setLocked = (content, isLocked) => {
+    doReorder(s, parentPath);
+    return s;
+  };
+  const onMainDrop = (e, ti) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragCtx.current || dragCtx.current.type !== 'main') {
+      setDragOver(null);
+      return;
+    }
+    const si = dragCtx.current.idx;
+    if (si === ti) {
+      setDragOver(null);
+      dragCtx.current = null;
+      return;
+    }
+    const f = [...folders];
+    const [m] = f.splice(si, 1);
+    f.splice(ti, 0, m);
+    setFolders(f);
+    setChanged(true);
+    setDragOver(null);
+    dragCtx.current = null;
+  };
+  const onInnerDrop = (e, folderIdx, parentPath, toIdx) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragCtx.current || dragCtx.current.type !== 'inner') {
+      setInnerDragOver(null);
+      dragCtx.current = null;
+      return;
+    }
+    const {
+      folderIdx: srcFI,
+      parentPath: srcPP,
+      idx: fromIdx
+    } = dragCtx.current;
+    if (srcFI !== folderIdx || srcPP !== parentPath || fromIdx === toIdx) {
+      setInnerDragOver(null);
+      dragCtx.current = null;
+      return;
+    }
+    const f = [...folders];
+    f[folderIdx] = {
+      ...f[folderIdx],
+      structure: reorderInStructure(f[folderIdx].structure, parentPath, fromIdx, toIdx),
+      count: f[folderIdx].count
+    };
+    setFolders(f);
+    setChanged(true);
+    setDirtyDirs(new Set([...dirtyDirs, parentPath || f[folderIdx].path]));
+    setInnerDragOver(null);
+    dragCtx.current = null;
+  };
+  const processWeightUpdates = async () => {
+    const tasks = [];
+    const search = (node, path) => {
+      if (path === null) return node;
+      for (let sub of node.folders) {
+        if (sub.path === path) return sub;
+        const res = search(sub, path);
+        if (res) return res;
+      }
+      return null;
+    };
+    Array.from(dirtyDirs).forEach(dirPath => {
+      const top = folders.find(f => dirPath.startsWith(f.path));
+      if (!top) return;
+      const tNode = dirPath === top.path ? top.structure : search(top.structure, dirPath);
+      if (!tNode) return;
+      const combined = [...tNode.folders, ...tNode.files];
+      combined.forEach((item, idx) => {
+        tasks.push({
+          item,
+          weight: idx + 1
+        });
+      });
+    });
+    if (tasks.length === 0) return;
+    const setWeight = (content, w) => {
       const lines = content.replace(/\r/g, '').split('\n');
       if (lines[0] === '---') {
-        let e = -1; let li = -1;
+        let e = -1;
+        let wi = -1;
         for (let i = 1; i < lines.length; i++) {
-          if (lines[i].startsWith('locked:')) li = i;
-          if (lines[i] === '---') { e = i; break; }
+          if (lines[i].startsWith('weight:')) wi = i;
+          if (lines[i] === '---') {
+            e = i;
+            break;
+          }
         }
         if (e !== -1) {
-          if (isLocked) {
-            if (li !== -1) lines[li] = `locked: true`;
-            else lines.splice(e, 0, `locked: true`);
-          } else {
-            if (li !== -1) lines.splice(li, 1);
-          }
+          if (wi !== -1) lines[wi] = `weight: ${w}`;else lines.splice(e, 0, `weight: ${w}`);
           return lines.join('\n');
         }
       }
-      if (isLocked) {
-        return `---\nlocked: true\n---\n${content}`;
-      }
-      return content;
+      return `---\nweight: ${w}\n---\n${content}`;
     };
-
-    /* SECURE TOKEN DECRYPTION */
-    // The token is encrypted with AES-GCM using the password as the key.
-    // To change the token, generate a new encrypted payload and replace these values:
-    const ENCRYPTED_TOKEN = "C2LuIMoWkHFX4i0XzsJzPbpCp7B0jLBQ4hSZOZmxRDX66rQBfaEh3v8XnEK6F0U7Qam/+xv3y1E=";
-    const SALT = "salty_safinat";
-    const IV = new Uint8Array([11, 22, 33, 44, 55, 66, 77, 88, 99, 10, 11, 12]);
-
-    async function decryptToken(password) {
-      try {
-        const enc = new TextEncoder();
-        const keyMaterial = await crypto.subtle.importKey(
-          "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]
-        );
-        const key = await crypto.subtle.deriveKey(
-          { name: "PBKDF2", salt: enc.encode(SALT), iterations: 100000, hash: "SHA-256" },
-          keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
-        );
-
-        // Convert base64 string to Uint8Array
-        const binary = atob(ENCRYPTED_TOKEN);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-        const decryptedOutput = await crypto.subtle.decrypt(
-          { name: "AES-GCM", iv: IV }, key, bytes
-        );
-        return new TextDecoder().decode(decryptedOutput);
-      } catch (e) {
-        throw new Error("Incorrect password");
-      }
-    }
-
-    const epath = (r, p) => `/repos/${r.owner}/${r.name}/contents/${encodeURIComponent(p).replace(/%2F/g, '/')}`;
-    async function gh(ep, opts = {}) {
-      const r = await fetch(GAPI + ep, { ...opts, headers: { 'Authorization': `Bearer ${_tok}`, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
-      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
-      return r.json();
-    }
-    const gGet = (r, p) => gh(epath(r, p) + `?ref=${r.branch}`);
-    const gPut = (r, p, content, sha, msg) => gh(epath(r, p), { method: 'PUT', body: JSON.stringify({ message: msg, content: enc(content), sha, branch: r.branch }) });
-    const gCreate = (r, p, content, msg) => gh(epath(r, p), { method: 'PUT', body: JSON.stringify({ message: msg, content: enc(content), branch: r.branch }) });
-    const gDel = (r, p, sha, msg) => gh(epath(r, p), { method: 'DELETE', body: JSON.stringify({ message: msg, sha, branch: r.branch }) });
-    const gList = (r, p) => gh(epath(r, p) + `?ref=${r.branch}`);
-    const extractWeight = (content) => {
-      if (!content) return 999;
-      const match = content.match(/weight:\s*(\d+)/);
-      return match ? parseInt(match[1], 10) : 999;
-    };
-
-    async function getTree(p, repo = CR) {
-      const data = await gList(repo, p);
-      const filesList = data.filter(i => i.type === 'file' && i.name.endsWith('.md') && i.name !== 'index.md');
-      const dirsList = data.filter(i => i.type === 'dir');
-
-      // Fetch files and their weights
-      const files = await Promise.all(filesList.map(async f => {
-        let weight = 999;
+    let err = 0;
+    toast.info(`Creating a single bulk commit for ${tasks.length} items...`);
+    try {
+      const ref = await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`);
+      const latestCommitSha = ref.object.sha;
+      const commit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits/${latestCommitSha}`);
+      const baseTreeSha = commit.tree.sha;
+      const tree = [];
+      for (const {
+        item,
+        weight
+      } of tasks) {
+        const fPath = item.type === 'dir' ? `${item.path}/index.md` : item.path;
+        let nContent = `---\ntitle: ${item.name}\nweight: ${weight}\n---\n`;
         try {
-          const fileRes = await gGet(repo, f.path);
-          weight = extractWeight(dec(fileRes.content));
-        } catch (e) { }
-        return { name: f.name, path: f.path, sha: f.sha, type: 'file', weight };
-      }));
-
-      // Fetch folders and their tree + weights
-      const folders = await Promise.all(dirsList.map(async d => {
-        let weight = 999;
-        try {
-          // Check for index.md to get folder weight
-          const idxRes = await gGet(repo, `${d.path}/index.md`);
-          weight = extractWeight(dec(idxRes.content));
-        } catch (e) { }
-        return { name: d.name, path: d.path, type: 'dir', weight, ...await getTree(d.path, repo) };
-      }));
-
-      // Sort by weight, then alphabetically as fallback
-      const sorter = (a, b) => {
-        if (a.weight !== b.weight) return a.weight - b.weight;
-        return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
-      };
-
-      files.sort(sorter);
-      folders.sort(sorter);
-
-      return { files, folders };
-    }
-    const countF = (s) => s.files.length + s.folders.reduce((a, f) => a + countF(f), 0);
-
-    /* TOAST */
-    let _toast = null;
-    const toast = { ok: (m) => _toast?.('ok', m), err: (m) => _toast?.('err', m), info: (m) => _toast?.('info', m) };
-    function Toasts() {
-      const [list, setList] = useState([]);
-      useEffect(() => {
-        _toast = (type, text) => { const id = Date.now(); setList(p => [...p, { id, type, text }]); setTimeout(() => setList(p => p.filter(t => t.id !== id)), 4000); };
-        return () => { _toast = null; };
-      }, []);
-      const ico = { ok: '✅', err: '❌', info: 'ℹ️' };
-      return <div className="toast-wrap">{list.map(t => <div key={t.id} className="toast"><span>{ico[t.type]}</span><span>{t.text}</span></div>)}</div>;
-    }
-
-    /* MODAL */
-    function Modal({ title, children, onClose, footer }) {
-      return (
-        <div className="overlay" onClick={onClose}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-hdr"><h3>{title}</h3><button className="btn-icon" onClick={onClose}>✕</button></div>
-            <div className="modal-body">{children}</div>
-            {footer && <div className="modal-foot">{footer}</div>}
-          </div>
-        </div>
-      );
-    }
-
-    /* SIDEBAR */
-    const PAGES = [
-      { id: 'folders', icon: '⠿', label: 'Folder Organizer', desc: 'Reorder homepage sections' },
-      { id: 'security', icon: '🔒', label: 'Archive Security', desc: 'Manage page locking' },
-      { id: 'settings', icon: '⚙️', label: 'Settings', desc: 'Site configuration' },
-    ];
-    function Sidebar({ page, setPage }) {
-      return (
-        <div className="sidebar">
-          <div className="sb-brand">
-            <div className="sb-icon">س</div>
-            <div><div className="sb-name">Safinat al-Najat</div><div className="sb-sub">Admin Dashboard</div></div>
-          </div>
-          <nav className="sb-nav">
-            {PAGES.map(p => (
-              <button key={p.id} className={`nav-btn ${page === p.id ? 'active' : ''}`} onClick={() => setPage(p.id)}>
-                <span className="nav-icon">{p.icon}</span>
-                <span><span className="nav-lbl">{p.label}</span><span className="nav-desc">{p.desc}</span></span>
-              </button>
-            ))}
-          </nav>
-          <div className="sb-foot"><div className="connected-dot"><div className="dot"></div><span>Connected to GitHub</span></div></div>
-        </div>
-      );
-    }
-
-    /* HEADER */
-    function Header({ page, dark, setDark, onLogout }) {
-      const info = {
-        folders: { t: 'Folder Organizer', s: 'Drag to reorder homepage sections' },
-        security: { t: 'Archive Security', s: 'Manage decryption password and page locks' },
-        settings: { t: 'Settings', s: 'Configure site features' },
-      };
-      const { t, s } = info[page] || info.folders;
-      return (
-        <div className="hdr">
-          <div className="hdr-left"><h1>{t}</h1><p>{s}</p></div>
-          <div className="hdr-right">
-            <button className="btn-icon" onClick={() => setDark(d => !d)} title="Toggle dark mode">{dark ? '☀️' : '🌙'}</button>
-            <button className="btn btn-ghost btn-sm" onClick={onLogout}>🔑 Change Token</button>
-          </div>
-        </div>
-      );
-    }
-
-    /* ============ AUTH PAGE ============ */
-    function AuthPage({ onAuth }) {
-      const [pwd, setPwd] = useState('');
-      const [loading, setLoading] = useState(false);
-      const [err, setErr] = useState('');
-
-      // Setup mode states
-      const needsSetup = ENCRYPTED_TOKEN.includes('replace this');
-      const [setupTok, setSetupTok] = useState('');
-      const [setupPwd, setSetupPwd] = useState('');
-      const [generatedCode, setGeneratedCode] = useState('');
-
-      const submit = async () => {
-        if (!pwd.trim()) return;
-        setLoading(true); setErr('');
-        try {
-          const token = await decryptToken(pwd);
-          setTok(token);
-          // Verify token can access both repos used by the dashboard.
-          const verifyHeaders = { 'Authorization': `Bearer ${token}` };
-          const contentRepo = await fetch(`${GAPI}/repos/${CR.owner}/${CR.name}`, { headers: verifyHeaders });
-          if (!contentRepo.ok) throw new Error('Could not access the notes repository. Admin password might be wrong or token expired.');
-          const quartzRepo = await fetch(`${GAPI}/repos/${QR.owner}/${QR.name}`, { headers: verifyHeaders });
-          if (!quartzRepo.ok) throw new Error('Could not access the Quartz repository. The token must have access to save archive-config.json.');
-          localStorage.setItem('admin_pwd', pwd); // Store password
-          onAuth(token);
-        } catch (e) { setPwd(''); setErr(e.message); }
-        finally { setLoading(false); }
-      };
-
-      const generateEncryptedToken = async () => {
-        if (!setupTok || !setupPwd) return;
-        setLoading(true);
-        try {
-          const enc = new TextEncoder();
-          const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(setupPwd), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]);
-          const key = await crypto.subtle.deriveKey(
-            { name: "PBKDF2", salt: enc.encode(SALT), iterations: 100000, hash: "SHA-256" },
-            keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
-          );
-          const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: IV }, key, enc.encode(setupTok));
-
-          const bytes = new Uint8Array(encrypted);
-          let binary = '';
-          for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-          const base64 = btoa(binary);
-          setGeneratedCode(`const ENCRYPTED_TOKEN = "${base64}";`);
-        } catch (e) { setErr('Encryption failed: ' + e.message); }
-        finally { setLoading(false); }
-      };
-
-      // Auto-login if password was saved
-      useEffect(() => {
-        if (!needsSetup) {
-          const saved = localStorage.getItem('admin_pwd');
-          if (saved) { setPwd(saved); setTimeout(submit, 100); }
-        }
-      }, [needsSetup]);
-
-      if (needsSetup) {
-        return (
-          <div className="auth-page">
-            <div className="auth-card" style={{ maxWidth: '550px' }}>
-              <div className="auth-top">
-                <h2>Initial Security Setup</h2>
-                <p>Convert your GitHub token into a secure, password-protected format.</p>
-              </div>
-              {err && <div className="alert alert-error">{err}</div>}
-
-              {!generatedCode ? (
-                <>
-                  <div className="form-group">
-                    <label>Your GitHub Token (ghp_...)</label>
-                    <input className="input" type="password" value={setupTok} onChange={e => setSetupTok(e.target.value)} />
-                  </div>
-                  <div className="form-group">
-                    <label>Create an Admin Password</label>
-                    <input className="input" type="password" value={setupPwd} onChange={e => setSetupPwd(e.target.value)} />
-                    <small>You will use this password to log in instead of the token.</small>
-                  </div>
-                  <button className="btn btn-primary btn-full" onClick={generateEncryptedToken} disabled={loading || !setupTok || !setupPwd}>
-                    {loading ? <span className="spin"></span> : '🔒'} Encrypt Token
-                  </button>
-                </>
-              ) : (
-                <div className="auth-hints" style={{ marginTop: 0 }}>
-                  <strong style={{ color: 'var(--ok-text)', fontSize: '1rem' }}>✅ Success! Complete setup:</strong>
-                  <p style={{ marginBottom: '1rem' }}>Copy the code below, open <code>index.html</code> in your editor, and replace line 200 with this code, then commit to GitHub.</p>
-                  <pre style={{ background: 'var(--bg)', padding: '1rem', borderRadius: '6px', overflowX: 'auto', border: '1px solid var(--border)', userSelect: 'all', fontFamily: 'monospace', fontSize: '.85rem', color: 'var(--accent)' }}>{generatedCode}</pre>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="auth-page">
-          <div className="auth-card">
-            <div className="auth-top">
-              <span className="auth-arabic">بِسْمِ اللّٰهِ</span>
-              <h2>Safinat al-Najat Admin</h2>
-              <p>Enter the admin password to access the dashboard</p>
-            </div>
-            {err && <div className="alert alert-error">{err}</div>}
-            <div className="form-group">
-              <label>Admin Password</label>
-              <input className="input" type="password" placeholder="••••••••" value={pwd} onChange={e => setPwd(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} autoFocus />
-            </div>
-            <button className="btn btn-primary btn-full" onClick={submit} disabled={loading || !pwd}>
-              {loading ? <span className="spin"></span> : '→'} Login
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    /* ============ FOLDER ORGANIZER ============ */
-    function FolderPage() {
-      const [folders, setFolders] = useState([]);
-      const [loading, setLoading] = useState(true);
-      const [saving, setSaving] = useState(false);
-      const [changed, setChanged] = useState(false);
-      const [exp, setExp] = useState({});
-      const [dragOver, setDragOver] = useState(null);
-      const [innerDragOver, setInnerDragOver] = useState(null);
-      const [dirtyDirs, setDirtyDirs] = useState(new Set());
-      const dragCtx = useRef(null);
-
-      useEffect(() => { load(); }, []);
-      const load = async () => {
-        setLoading(true); setDirtyDirs(new Set()); setChanged(false);
-        try {
-          const rootData = await gList(CR, '');
-          const rootDirs = rootData.filter(i => i.type === 'dir' && !i.name.startsWith('.') && i.name !== 'quartz' && i.name.toLowerCase() !== 'pngs' && i.name.toLowerCase() !== 'png');
-
-          let indexContent = '';
-          try { const f = await gGet(CR, 'index.md'); indexContent = dec(f.content); } catch (e) { }
-
-          const extractSection = (path) => {
-            const searchSlugs = [path, encodeURIComponent(path), path.replace(/ /g, '%20')];
-            for (let s of searchSlugs) {
-              const escapedSlug = s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-              const re = new RegExp(`## \\[[^\\]]+\\]\\(${escapedSlug}\\)[^\\n]*(?:\\n[^\\n]*)*`, 'i');
-              const m = indexContent.match(re);
-              if (m) {
-                let extracted = m[0];
-                // Simply cut at "for any queries" (case-insensitive)
-                const footerIdx = extracted.toLowerCase().indexOf('for any queries');
-                if (footerIdx !== -1) {
-                  extracted = extracted.substring(0, footerIdx);
-                }
-                return extracted.trim();
-              }
-            }
-            return '';
-          };
-
-          const all = await Promise.all(rootDirs.map(async (d) => {
-            let block = extractSection(d.path);
-            let icon = '📁', display = d.name, desc = '';
-            if (block) {
-              const mdDesc = block.split('\n').slice(1).join('\n').trim();
-              desc = mdDesc || desc; // Actually use the description you extracted
-
-              const m2 = block.match(/## \[\s*([^\]]+)\s*\]/); // Fixed: single backslash
-              if (m2) { // Fixed: Restored the missing 'if' statement
-                const parts = m2[1].split(' ');
-                if (parts.length > 1) { icon = parts[0]; display = parts.slice(1).join(' '); }
-                else { icon = ''; display = parts[0]; }
-              }
-            }
-
-            const existingCat = CATS.find(c => c.path === d.path);
-            const catData = {
-              id: existingCat?.id || d.name.toLowerCase().replace(/\s+/g, '-'),
-              name: d.name.toUpperCase(),
-              icon: block ? icon : (existingCat?.icon || '📁'),
-              path: d.path,
-              slug: encodeURIComponent(d.name),
-              display: block ? display : (existingCat?.display || d.name),
-              desc: block ? desc : (existingCat?.desc || desc),
-              // Clean rawBlock: remove any footer text and trailing dashes/whitespace
-              rawBlock: block ? block.replace(/[-\s]+$/, '').trim() : ''
-            };
-            try {
-              const s = await getTree(catData.path);
-              return { ...catData, count: countF(s), structure: s };
-            } catch (e) {
-              return { ...catData, count: 0, structure: { files: [], folders: [] } };
-            }
-          }));
-          setFolders(all);
-        } catch (e) { toast.err('Load failed: ' + e.message); }
-        finally { setLoading(false); }
-      };
-
-      /* deep-clone structure helper */
-      const cloneStructure = (s) => ({ files: [...s.files], folders: s.folders.map(f => ({ ...f, ...cloneStructure(f) })) });
-
-      /* reorder items within a structure node identified by parentPath */
-      const reorderInStructure = (structure, parentPath, fromIdx, toIdx) => {
-        const s = cloneStructure(structure);
-        const doReorder = (node, target) => {
-          if (target === null) {
-            /* reorder at this level */
-            const combined = [...node.folders, ...node.files];
-            const [moved] = combined.splice(fromIdx, 1);
-            combined.splice(toIdx, 0, moved);
-            node.folders = combined.filter(i => i.type === 'dir');
-            node.files = combined.filter(i => i.type === 'file');
-            return true;
+          const fileRes = await gGet(CR, fPath).catch(() => null);
+          if (fileRes && fileRes.content) {
+            nContent = setWeight(dec(fileRes.content), weight);
           }
-          for (let sub of node.folders) {
-            if (sub.path === target) {
-              const combined = [...sub.folders, ...sub.files];
-              const [moved] = combined.splice(fromIdx, 1);
-              combined.splice(toIdx, 0, moved);
-              sub.folders = combined.filter(i => i.type === 'dir');
-              sub.files = combined.filter(i => i.type === 'file');
-              return true;
-            }
-            if (doReorder(sub, target)) return true;
-          }
-          return false;
-        };
-        doReorder(s, parentPath);
-        return s;
-      };
-
-      /* main folder drop */
-      const onMainDrop = (e, ti) => {
-        e.preventDefault(); e.stopPropagation();
-        if (!dragCtx.current || dragCtx.current.type !== 'main') { setDragOver(null); return; }
-        const si = dragCtx.current.idx;
-        if (si === ti) { setDragOver(null); dragCtx.current = null; return; }
-        const f = [...folders]; const [m] = f.splice(si, 1); f.splice(ti, 0, m);
-        setFolders(f); setChanged(true); setDragOver(null); dragCtx.current = null;
-      };
-
-      /* inner item drop (subfolders + files within a main folder) */
-      const onInnerDrop = (e, folderIdx, parentPath, toIdx) => {
-        e.preventDefault(); e.stopPropagation();
-        if (!dragCtx.current || dragCtx.current.type !== 'inner') { setInnerDragOver(null); dragCtx.current = null; return; }
-        const { folderIdx: srcFI, parentPath: srcPP, idx: fromIdx } = dragCtx.current;
-        if (srcFI !== folderIdx || srcPP !== parentPath || fromIdx === toIdx) { setInnerDragOver(null); dragCtx.current = null; return; }
-        const f = [...folders];
-        f[folderIdx] = { ...f[folderIdx], structure: reorderInStructure(f[folderIdx].structure, parentPath, fromIdx, toIdx), count: f[folderIdx].count };
-        setFolders(f); setChanged(true);
-        setDirtyDirs(new Set([...dirtyDirs, parentPath || f[folderIdx].path]));
-        setInnerDragOver(null); dragCtx.current = null;
-      };
-
-      const processWeightUpdates = async () => {
-        const tasks = [];
-        const search = (node, path) => {
-          if (path === null) return node;
-          for (let sub of node.folders) {
-            if (sub.path === path) return sub;
-            const res = search(sub, path);
-            if (res) return res;
-          }
-          return null;
-        };
-        Array.from(dirtyDirs).forEach(dirPath => {
-          const top = folders.find(f => dirPath.startsWith(f.path));
-          if (!top) return;
-          const tNode = dirPath === top.path ? top.structure : search(top.structure, dirPath);
-          if (!tNode) return;
-          const combined = [...tNode.folders, ...tNode.files];
-          combined.forEach((item, idx) => {
-            tasks.push({ item, weight: idx + 1 });
+          tree.push({
+            path: fPath,
+            mode: '100644',
+            type: 'blob',
+            content: nContent
           });
-        });
-        if (tasks.length === 0) return;
-
-        const setWeight = (content, w) => {
-          const lines = content.replace(/\r/g, '').split('\n');
-          if (lines[0] === '---') {
-            let e = -1; let wi = -1;
-            for (let i = 1; i < lines.length; i++) {
-              if (lines[i].startsWith('weight:')) wi = i;
-              if (lines[i] === '---') { e = i; break; }
-            }
-            if (e !== -1) {
-              if (wi !== -1) lines[wi] = `weight: ${w}`;
-              else lines.splice(e, 0, `weight: ${w}`);
-              return lines.join('\n');
-            }
-          }
-          return `---\nweight: ${w}\n---\n${content}`;
-        };
-
-        let err = 0;
-        toast.info(`Creating a single bulk commit for ${tasks.length} items...`);
-
-        try {
-          // 1. Get current branch ref to get latest commit SHA
-          const ref = await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`);
-          const latestCommitSha = ref.object.sha;
-
-          // 2. Get the commit to get its tree SHA
-          const commit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits/${latestCommitSha}`);
-          const baseTreeSha = commit.tree.sha;
-
-          // 3. Prepare the new tree array
-          const tree = [];
-          for (const { item, weight } of tasks) {
-            const fPath = item.type === 'dir' ? `${item.path}/index.md` : item.path;
-            let nContent = `---\ntitle: ${item.name}\nweight: ${weight}\n---\n`;
-            try {
-              const fileRes = await gGet(CR, fPath).catch(() => null);
-              if (fileRes && fileRes.content) {
-                nContent = setWeight(dec(fileRes.content), weight);
-              }
-              tree.push({
-                path: fPath,
-                mode: '100644',
-                type: 'blob',
-                content: nContent
-              });
-            } catch (e) { err++; console.error(e); }
-          }
-
-          if (tree.length > 0) {
-            // 4. Create new tree
-            const newTree = await gh(`/repos/${CR.owner}/${CR.name}/git/trees`, {
-              method: 'POST',
-              body: JSON.stringify({ base_tree: baseTreeSha, tree })
-            });
-
-            // 5. Create new commit
-            const newCommit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits`, {
-              method: 'POST',
-              body: JSON.stringify({
-                message: `🗂️ Bulk update folder/file weights via Admin Dashboard`,
-                tree: newTree.sha,
-                parents: [latestCommitSha]
-              })
-            });
-
-            // 6. Update reference
-            await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ sha: newCommit.sha, force: false })
-            });
-          }
         } catch (e) {
-          toast.err('Bulk commit failed: ' + e.message);
-        }
-
-        if (err > 0) toast.err(`Failed to update some files.`);
-      };
-
-      const deploy = async () => {
-        setSaving(true);
-        toast.info('Starting deployment... do not close the page.');
-        try {
-          await processWeightUpdates();
-
-          toast.ok('Deployed successfully! Only subfolder/file order was updated.');
-          setChanged(false); setDirtyDirs(new Set());
-        } catch (e) {
-          toast.err('Deploy failed: ' + e.message);
-        } finally {
-          setSaving(false);
-        }
-      };
-
-      /* Recursive tree renderer with drag & drop at every level */
-      const renderInnerTree = (structure, folderIdx, parentPath, depth = 0) => {
-        const combined = [...structure.folders, ...structure.files];
-        return combined.map((item, idx) => {
-          const isDir = item.type === 'dir';
-          const dragKey = `${parentPath || 'root'}::${idx}`;
-          const isOver = innerDragOver === dragKey;
-          return (
-            <div key={item.path}>
-              <div
-                className={`${isDir ? 'tree-sub' : 'tree-file-item'} ${isOver ? 'drag-over' : ''}`}
-                style={{ marginLeft: `${depth * 16}px`, cursor: 'grab', transition: 'all .15s' }}
-                draggable
-                onDragStart={e => { e.stopPropagation(); dragCtx.current = { type: 'inner', folderIdx, parentPath, idx }; e.dataTransfer.effectAllowed = 'move'; }}
-                onDragOver={e => { e.preventDefault(); e.stopPropagation(); setInnerDragOver(dragKey); }}
-                onDragLeave={e => { e.stopPropagation(); if (innerDragOver === dragKey) setInnerDragOver(null); }}
-                onDrop={e => onInnerDrop(e, folderIdx, parentPath, idx)}
-              >
-                {isDir ? (
-                  <>
-                    <span style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '.5rem', flex: 1 }} onClick={() => setExp(e => ({ ...e, [item.path]: !e[item.path] }))}>
-                      {exp[item.path] ? '📂' : '📁'} {item.name}
-                    </span>
-                    <span className="badge-sm">{countF(item)}</span>
-                    <span style={{ fontSize: '.7rem', marginLeft: '.5rem', color: 'var(--text2)' }}>{exp[item.path] ? '▲' : '▼'}</span>
-                  </>
-                ) : (
-                  <><span style={{ display: 'flex', alignItems: 'center', gap: '.5rem', flex: 1 }}>📄 {item.name.replace('.md', '')}</span><span className="drag-handle" style={{ fontSize: '.8rem' }}>⠿</span></>
-                )}
-              </div>
-              {isDir && exp[item.path] && renderInnerTree(item, folderIdx, item.path, depth + 1)}
-            </div>
-          );
-        });
-      };
-
-      if (loading) return <div className="content">{[1, 2, 3].map(i => <div key={i} className="skel skel-card"></div>)}</div>;
-      return (
-        <div className="content">
-          {changed && <div className="alert alert-warn">⚠️ Unsaved changes — click Deploy to publish.</div>}
-          {folders.map((f, i) => (
-            <div key={f.id} className="folder-card">
-              <div className="folder-main">
-                <span className="folder-emoji">{f.icon}</span>
-                <div style={{ flex: 1 }}>
-                  <div className="folder-name">{f.name}</div>
-                  <div className="folder-meta">
-                    <span className="badge">{f.count} files</span>
-                    <span className="badge-sm">{f.structure.folders.length} subfolders</span>
-                  </div>
-                </div>
-                <div className="folder-actions">
-                  <span className="order-badge">#{i + 1}</span>
-                  <button className="btn-icon" onClick={e => { e.stopPropagation(); setExp(ex => ({ ...ex, [f.id]: !ex[f.id] })); }}>
-                    {exp[f.id] ? '▲' : '▼'}
-                  </button>
-                </div>
-              </div>
-              {exp[f.id] && (
-                <div className="folder-tree">
-                  {renderInnerTree(f.structure, i, null, 0)}
-                  {f.structure.folders.length === 0 && f.structure.files.length === 0 &&
-                    <div style={{ color: 'var(--text2)', fontSize: '.82rem', textAlign: 'center', padding: '1rem' }}>No items</div>
-                  }
-                </div>
-              )}
-            </div>
-          ))}
-          <div className="action-bar">
-            <button className="btn btn-secondary" onClick={load}>↺ Refresh</button>
-            <button className="btn btn-primary" onClick={deploy} disabled={!changed || saving}>
-              {saving ? <><span className="spin"></span> Deploying…</> : '🚀 Deploy Changes'}
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    /* ============ FILE MANAGER ============ */
-    function FilePage() { return null; }
-    /* ============ SETTINGS ============ */
-    function SettingsPage() {
-      const [layout, setLayout] = useState('');
-      const [layoutSha, setLayoutSha] = useState('');
-      const [config, setConfig] = useState('');
-      const [configSha, setConfigSha] = useState('');
-      const [foldersFirst, setFoldersFirst] = useState(false);
-      const [toggles, setToggles] = useState({});
-      const [loading, setLoading] = useState(true);
-      const [savingL, setSavingL] = useState(false);
-
-      useEffect(() => { loadSettings(); }, []);
-      const loadSettings = async () => {
-        setLoading(true);
-        try {
-          const lf = await gGet(QR, 'quartz.layout.ts');
-          const lc = dec(lf.content); setLayout(lc); setLayoutSha(lf.sha);
-          const togs = {};
-          TOGGLES.forEach(t => {
-            const commented = new RegExp(`//\\s*\${t.comp.replace(/[()]/g,'\\$&')}`).test(lc);
-            const present = lc.includes(t.comp);
-            togs[t.key] = present && !commented;
-          });
-          setToggles(togs);
-          try {
-            const cf = await gGet(QR, 'quartz.config.ts');
-            const cc = dec(cf.content); setConfig(cc); setConfigSha(cf.sha);
-            setFoldersFirst(cc.includes('aIsFolder'));
-          } catch (e) { }
-        } catch (e) { toast.err('Failed to load settings: ' + e.message); }
-        finally { setLoading(false); }
-      };
-      const saveToggles = async () => {
-        setSavingL(true);
-        try {
-          let nl = layout;
-          TOGGLES.forEach(t => {
-            const idx = nl.indexOf(t.comp.replace('()', ''));
-            if (idx === -1) return;
-            const lineStart = nl.lastIndexOf('\n', idx);
-            const isCommented = nl.slice(lineStart, idx).includes('//');
-            const shouldBeCommented = !toggles[t.key];
-            if (isCommented === shouldBeCommented) return;
-            let blockStart = lineStart + 1;
-            let blockEnd = nl.indexOf('\n', idx);
-            const braceIdx = nl.indexOf('{', idx);
-            if (braceIdx !== -1 && braceIdx < blockEnd) {
-              let depth = 0;
-              for (let i = braceIdx; i < nl.length; i++) {
-                if (nl[i] === '{') depth++;
-                if (nl[i] === '}') {
-                  depth--;
-                  if (depth === 0) {
-                    blockEnd = nl.indexOf('\n', i) !== -1 ? nl.indexOf('\n', i) : i + 1;
-                    break;
-                  }
-                }
-              }
-            }
-            const block = nl.substring(blockStart, blockEnd);
-            let newBlock;
-            if (shouldBeCommented) {
-              newBlock = block.split('\n').map(l => '    // ' + l.trimStart()).join('\n');
-            } else {
-              newBlock = block.split('\n').map(l => l.replace(/^\s*\/\/\s*/, '    ')).join('\n');
-            }
-            nl = nl.substring(0, blockStart) + newBlock + nl.substring(blockEnd);
-          });
-          const res = await gPut(QR, 'quartz.layout.ts', nl, layoutSha, '⚙️ Update feature toggles via Admin Dashboard');
-          setLayout(nl); setLayoutSha(res.content.sha); toast.ok('Features saved! Quartz rebuilds shortly.');
-        } catch (e) { toast.err('Save failed: ' + e.message); }
-        finally { setSavingL(false); }
-      };
-
-      if (loading) return <div className="content">{[1, 2, 3].map(i => <div key={i} className="skel skel-card" style={{ height: '160px' }}></div>)}</div>;
-      return (
-        <div className="content">
-          <div className="settings-card">
-            <div className="settings-hdr">
-              <div><div className="settings-title">⚙️ Site Features</div><div className="settings-sub">Updates <code>quartz.layout.ts</code> in the quartz repo</div></div>
-              <button className="btn btn-primary btn-sm" onClick={saveToggles} disabled={savingL}>{savingL ? <span className="spin"></span> : 'Save Features'}</button>
-            </div>
-            <div className="toggles">
-              {TOGGLES.map(t => (
-                <div key={t.key} className="toggle-row">
-                  <span className="toggle-ico">{t.icon}</span>
-                  <div className="toggle-info"><div className="toggle-lbl">{t.label}</div><div className="toggle-desc">{t.desc}</div></div>
-                  <button className={`switch ${toggles[t.key] ? 'on' : 'off'}`} onClick={() => setToggles(p => ({ ...p, [t.key]: !p[t.key] }))}>
-                    <div className="switch-thumb"></div>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="settings-card">
-            <div className="settings-title" style={{ marginBottom: '1rem' }}>📦 Repository Info</div>
-            <div className="repo-grid">
-              <div className="repo-item"><div className="repo-lbl">Content Repository</div><div className="repo-val">{CR.owner}/{CR.name}</div><div className="repo-branch">Branch: {CR.branch}</div></div>
-              <div className="repo-item"><div className="repo-lbl">Quartz Repository</div><div className="repo-val">{QR.owner}/{QR.name}</div><div className="repo-branch">Branch: {QR.branch}</div></div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    /* ============ ARCHIVE SECURITY ============ */
-    function SecurityPage() {
-      const [notes, setNotes] = useState([]);
-      const [pwd, setPwd] = useState('');
-      const [pwdSha, setPwdSha] = useState('');
-      const [loadingPwd, setLoadingPwd] = useState(true);
-      const [loadingNotes, setLoadingNotes] = useState(true);
-      const [savingPwd, setSavingPwd] = useState(false);
-      const [vaultPath, setVaultPath] = useState('locked');
-
-      useEffect(() => {
-        loadPwd();
-        loadNotesList();
-      }, []);
-
-      const loadPwd = async () => {
-        setLoadingPwd(true);
-        try {
-          const res = await gGet(QR, 'archive-config.json').catch(() => null);
-          if (res && res.content) {
-            const config = JSON.parse(dec(res.content));
-            setPwd(config.password || '');
-            setPwdSha(res.sha);
-          }
-        } catch (e) {
+          err++;
           console.error(e);
-        } finally {
-          setLoadingPwd(false);
         }
-      };
-
-      const savePwd = async () => {
-        if (!pwd.trim()) {
-          toast.err('Password cannot be empty');
-          return;
+      }
+      if (tree.length > 0) {
+        const newTree = await gh(`/repos/${CR.owner}/${CR.name}/git/trees`, {
+          method: 'POST',
+          body: JSON.stringify({
+            base_tree: baseTreeSha,
+            tree
+          })
+        });
+        const newCommit = await gh(`/repos/${CR.owner}/${CR.name}/git/commits`, {
+          method: 'POST',
+          body: JSON.stringify({
+            message: `🗂️ Bulk update folder/file weights via Admin Dashboard`,
+            tree: newTree.sha,
+            parents: [latestCommitSha]
+          })
+        });
+        await gh(`/repos/${CR.owner}/${CR.name}/git/refs/heads/${CR.branch}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            sha: newCommit.sha,
+            force: false
+          })
+        });
+      }
+    } catch (e) {
+      toast.err('Bulk commit failed: ' + e.message);
+    }
+    if (err > 0) toast.err(`Failed to update some files.`);
+  };
+  const deploy = async () => {
+    setSaving(true);
+    toast.info('Starting deployment... do not close the page.');
+    try {
+      await processWeightUpdates();
+      toast.ok('Deployed successfully! Only subfolder/file order was updated.');
+      setChanged(false);
+      setDirtyDirs(new Set());
+    } catch (e) {
+      toast.err('Deploy failed: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+  const renderInnerTree = (structure, folderIdx, parentPath, depth = 0) => {
+    const combined = [...structure.folders, ...structure.files];
+    return combined.map((item, idx) => {
+      const isDir = item.type === 'dir';
+      const dragKey = `${parentPath || 'root'}::${idx}`;
+      const isOver = innerDragOver === dragKey;
+      return React.createElement("div", {
+        key: item.path
+      }, React.createElement("div", {
+        className: `${isDir ? 'tree-sub' : 'tree-file-item'} ${isOver ? 'drag-over' : ''}`,
+        style: {
+          marginLeft: `${depth * 16}px`,
+          cursor: 'grab',
+          transition: 'all .15s'
+        },
+        draggable: true,
+        onDragStart: e => {
+          e.stopPropagation();
+          dragCtx.current = {
+            type: 'inner',
+            folderIdx,
+            parentPath,
+            idx
+          };
+          e.dataTransfer.effectAllowed = 'move';
+        },
+        onDragOver: e => {
+          e.preventDefault();
+          e.stopPropagation();
+          setInnerDragOver(dragKey);
+        },
+        onDragLeave: e => {
+          e.stopPropagation();
+          if (innerDragOver === dragKey) setInnerDragOver(null);
+        },
+        onDrop: e => onInnerDrop(e, folderIdx, parentPath, idx)
+      }, isDir ? React.createElement(React.Fragment, null, React.createElement("span", {
+        style: {
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '.5rem',
+          flex: 1
+        },
+        onClick: () => setExp(e => ({
+          ...e,
+          [item.path]: !e[item.path]
+        }))
+      }, exp[item.path] ? '📂' : '📁', " ", item.name), React.createElement("span", {
+        className: "badge-sm"
+      }, countF(item)), React.createElement("span", {
+        style: {
+          fontSize: '.7rem',
+          marginLeft: '.5rem',
+          color: 'var(--text2)'
         }
-        setSavingPwd(true);
-        try {
-          const payload = JSON.stringify({ password: pwd }, null, 2);
-          let res;
-          if (pwdSha) {
-            res = await gPut(QR, 'archive-config.json', payload, pwdSha, '🔒 Update master password via Admin Dashboard');
-          } else {
-            res = await gCreate(QR, 'archive-config.json', payload, '🔒 Initialize master password via Admin Dashboard');
-          }
-          if (res && res.content) {
-            setPwdSha(res.content.sha);
-          }
-          toast.ok('Master password updated. The next Quartz deployment will use this archive-config.json value.');
-        } catch (e) {
-          toast.err('Failed to save password: ' + e.message);
-        } finally {
-          setSavingPwd(false);
+      }, exp[item.path] ? '▲' : '▼')) : React.createElement(React.Fragment, null, React.createElement("span", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '.5rem',
+          flex: 1
         }
-      };
-
-      const loadNotesList = async () => {
-        setLoadingNotes(true);
-        try {
-          const treeData = await gh(`/repos/${CR.owner}/${CR.name}/git/trees/${CR.branch}?recursive=1`);
-          
-          // Determine the vault path dynamically based on folder structure in repository
-          const hasExtensiveResearch = treeData.tree.some(i => i.path.startsWith('Extensive Research/'));
-          const vPath = hasExtensiveResearch ? 'Extensive Research/locked' : 'locked';
-          setVaultPath(vPath);
-
-          const mdFiles = treeData.tree
-            .filter(i => i.type === 'blob' && i.path.endsWith('.md') && i.path.startsWith(vPath + '/'))
-            .map(i => ({
-              name: i.path.split('/').pop().replace('.md', ''),
-              path: i.path,
-              sha: i.sha
-            }));
-          setNotes(mdFiles);
-        } catch (e) {
-          toast.err('Failed to load vault files: ' + e.message);
-        } finally {
-          setLoadingNotes(false);
+      }, "\uD83D\uDCC4 ", item.name.replace('.md', '')), React.createElement("span", {
+        className: "drag-handle",
+        style: {
+          fontSize: '.8rem'
         }
-      };
-
-      // Convert flat array of vault files into a nested tree structure
-      const buildTree = (files, prefix) => {
-        const root = { name: 'Vault', type: 'dir', children: {} };
-        for (const file of files) {
-          // Remove prefix plus slash
-          const relPath = file.path.substring(prefix.length + 1);
-          if (!relPath) continue;
-          const parts = relPath.split('/');
-          let current = root;
-          for (let i = 0; i < parts.length; i++) {
-            const part = parts[i];
-            const isLast = i === parts.length - 1;
-            if (isLast) {
-              current.children[part] = { name: part.replace('.md', ''), type: 'file', path: file.path };
-            } else {
-              if (!current.children[part]) {
-                current.children[part] = { name: part, type: 'dir', children: {} };
+      }, "\u283F"))), isDir && exp[item.path] && renderInnerTree(item, folderIdx, item.path, depth + 1));
+    });
+  };
+  if (loading) return React.createElement("div", {
+    className: "content"
+  }, [1, 2, 3].map(i => React.createElement("div", {
+    key: i,
+    className: "skel skel-card"
+  })));
+  return React.createElement("div", {
+    className: "content"
+  }, changed && React.createElement("div", {
+    className: "alert alert-warn"
+  }, "\u26A0\uFE0F Unsaved changes \u2014 click Deploy to publish."), folders.map((f, i) => React.createElement("div", {
+    key: f.id,
+    className: "folder-card"
+  }, React.createElement("div", {
+    className: "folder-main"
+  }, React.createElement("span", {
+    className: "folder-emoji"
+  }, f.icon), React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, React.createElement("div", {
+    className: "folder-name"
+  }, f.name), React.createElement("div", {
+    className: "folder-meta"
+  }, React.createElement("span", {
+    className: "badge"
+  }, f.count, " files"), React.createElement("span", {
+    className: "badge-sm"
+  }, f.structure.folders.length, " subfolders"))), React.createElement("div", {
+    className: "folder-actions"
+  }, React.createElement("span", {
+    className: "order-badge"
+  }, "#", i + 1), React.createElement("button", {
+    className: "btn-icon",
+    onClick: e => {
+      e.stopPropagation();
+      setExp(ex => ({
+        ...ex,
+        [f.id]: !ex[f.id]
+      }));
+    }
+  }, exp[f.id] ? '▲' : '▼'))), exp[f.id] && React.createElement("div", {
+    className: "folder-tree"
+  }, renderInnerTree(f.structure, i, null, 0), f.structure.folders.length === 0 && f.structure.files.length === 0 && React.createElement("div", {
+    style: {
+      color: 'var(--text2)',
+      fontSize: '.82rem',
+      textAlign: 'center',
+      padding: '1rem'
+    }
+  }, "No items")))), React.createElement("div", {
+    className: "action-bar"
+  }, React.createElement("button", {
+    className: "btn btn-secondary",
+    onClick: load
+  }, "\u21BA Refresh"), React.createElement("button", {
+    className: "btn btn-primary",
+    onClick: deploy,
+    disabled: !changed || saving
+  }, saving ? React.createElement(React.Fragment, null, React.createElement("span", {
+    className: "spin"
+  }), " Deploying\u2026") : '🚀 Deploy Changes')));
+}
+function FilePage() {
+  return null;
+}
+function SettingsPage() {
+  const [layout, setLayout] = useState('');
+  const [layoutSha, setLayoutSha] = useState('');
+  const [config, setConfig] = useState('');
+  const [configSha, setConfigSha] = useState('');
+  const [foldersFirst, setFoldersFirst] = useState(false);
+  const [toggles, setToggles] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [savingL, setSavingL] = useState(false);
+  useEffect(() => {
+    loadSettings();
+  }, []);
+  const loadSettings = async () => {
+    setLoading(true);
+    try {
+      const lf = await gGet(QR, 'quartz.layout.ts');
+      const lc = dec(lf.content);
+      setLayout(lc);
+      setLayoutSha(lf.sha);
+      const togs = {};
+      TOGGLES.forEach(t => {
+        const commented = new RegExp(`//\\s*\${t.comp.replace(/[()]/g,'\\$&')}`).test(lc);
+        const present = lc.includes(t.comp);
+        togs[t.key] = present && !commented;
+      });
+      setToggles(togs);
+      try {
+        const cf = await gGet(QR, 'quartz.config.ts');
+        const cc = dec(cf.content);
+        setConfig(cc);
+        setConfigSha(cf.sha);
+        setFoldersFirst(cc.includes('aIsFolder'));
+      } catch (e) {}
+    } catch (e) {
+      toast.err('Failed to load settings: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const saveToggles = async () => {
+    setSavingL(true);
+    try {
+      let nl = layout;
+      TOGGLES.forEach(t => {
+        const idx = nl.indexOf(t.comp.replace('()', ''));
+        if (idx === -1) return;
+        const lineStart = nl.lastIndexOf('\n', idx);
+        const isCommented = nl.slice(lineStart, idx).includes('//');
+        const shouldBeCommented = !toggles[t.key];
+        if (isCommented === shouldBeCommented) return;
+        let blockStart = lineStart + 1;
+        let blockEnd = nl.indexOf('\n', idx);
+        const braceIdx = nl.indexOf('{', idx);
+        if (braceIdx !== -1 && braceIdx < blockEnd) {
+          let depth = 0;
+          for (let i = braceIdx; i < nl.length; i++) {
+            if (nl[i] === '{') depth++;
+            if (nl[i] === '}') {
+              depth--;
+              if (depth === 0) {
+                blockEnd = nl.indexOf('\n', i) !== -1 ? nl.indexOf('\n', i) : i + 1;
+                break;
               }
-              current = current.children[part];
             }
           }
         }
-        return root;
-      };
-
-      const renderTree = (node, depth = 0) => {
-        const children = Object.values(node.children || {});
-        
-        // Sort children: directories first, then files
-        children.sort((a, b) => {
-          if (a.type !== b.type) {
-            return a.type === 'dir' ? -1 : 1;
-          }
-          return a.name.localeCompare(b.name);
-        });
-
-        return children.map(child => {
-          if (child.type === 'file') {
-            return (
-              <div key={child.path} className="tree-file-node" style={{ paddingLeft: `${(depth + 1) * 1.25}rem`, display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.375rem 0' }}>
-                <span style={{ fontSize: '1rem', width: '20px', textAlign: 'center' }}>📄</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text)' }}>{child.name}</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text2)' }}>{child.path}</div>
-                </div>
-                <span className="badge-sm" style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.68rem', padding: '0.15rem 0.4rem', borderRadius: '4px', whiteSpace: 'nowrap' }}>Secured</span>
-              </div>
-            );
-          } else {
-            return (
-              <div key={child.name} className="tree-dir-node" style={{ margin: '0.5rem 0' }}>
-                <div className="tree-dir-header" style={{ paddingLeft: `${depth * 1.25}rem`, display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', fontSize: '0.9rem', color: 'var(--secondary)' }}>
-                  <span style={{ fontSize: '1.05rem', width: '20px', textAlign: 'center' }}>📁</span>
-                  <span>{child.name.toUpperCase()}</span>
-                </div>
-                <div className="tree-dir-body">
-                  {renderTree(child, depth + 1)}
-                </div>
-              </div>
-            );
-          }
-        });
-      };
-
-      if (loadingPwd && loadingNotes) {
-        return <div className="content"><div className="skel skel-card" style={{ height: '140px' }}></div><div className="skel skel-card" style={{ height: '300px' }}></div></div>;
+        const block = nl.substring(blockStart, blockEnd);
+        let newBlock;
+        if (shouldBeCommented) {
+          newBlock = block.split('\n').map(l => '    // ' + l.trimStart()).join('\n');
+        } else {
+          newBlock = block.split('\n').map(l => l.replace(/^\s*\/\/\s*/, '    ')).join('\n');
+        }
+        nl = nl.substring(0, blockStart) + newBlock + nl.substring(blockEnd);
+      });
+      const res = await gPut(QR, 'quartz.layout.ts', nl, layoutSha, '⚙️ Update feature toggles via Admin Dashboard');
+      setLayout(nl);
+      setLayoutSha(res.content.sha);
+      toast.ok('Features saved! Quartz rebuilds shortly.');
+    } catch (e) {
+      toast.err('Save failed: ' + e.message);
+    } finally {
+      setSavingL(false);
+    }
+  };
+  if (loading) return React.createElement("div", {
+    className: "content"
+  }, [1, 2, 3].map(i => React.createElement("div", {
+    key: i,
+    className: "skel skel-card",
+    style: {
+      height: '160px'
+    }
+  })));
+  return React.createElement("div", {
+    className: "content"
+  }, React.createElement("div", {
+    className: "settings-card"
+  }, React.createElement("div", {
+    className: "settings-hdr"
+  }, React.createElement("div", null, React.createElement("div", {
+    className: "settings-title"
+  }, "\u2699\uFE0F Site Features"), React.createElement("div", {
+    className: "settings-sub"
+  }, "Updates ", React.createElement("code", null, "quartz.layout.ts"), " in the quartz repo")), React.createElement("button", {
+    className: "btn btn-primary btn-sm",
+    onClick: saveToggles,
+    disabled: savingL
+  }, savingL ? React.createElement("span", {
+    className: "spin"
+  }) : 'Save Features')), React.createElement("div", {
+    className: "toggles"
+  }, TOGGLES.map(t => React.createElement("div", {
+    key: t.key,
+    className: "toggle-row"
+  }, React.createElement("span", {
+    className: "toggle-ico"
+  }, t.icon), React.createElement("div", {
+    className: "toggle-info"
+  }, React.createElement("div", {
+    className: "toggle-lbl"
+  }, t.label), React.createElement("div", {
+    className: "toggle-desc"
+  }, t.desc)), React.createElement("button", {
+    className: `switch ${toggles[t.key] ? 'on' : 'off'}`,
+    onClick: () => setToggles(p => ({
+      ...p,
+      [t.key]: !p[t.key]
+    }))
+  }, React.createElement("div", {
+    className: "switch-thumb"
+  })))))), React.createElement("div", {
+    className: "settings-card"
+  }, React.createElement("div", {
+    className: "settings-title",
+    style: {
+      marginBottom: '1rem'
+    }
+  }, "\uD83D\uDCE6 Repository Info"), React.createElement("div", {
+    className: "repo-grid"
+  }, React.createElement("div", {
+    className: "repo-item"
+  }, React.createElement("div", {
+    className: "repo-lbl"
+  }, "Content Repository"), React.createElement("div", {
+    className: "repo-val"
+  }, CR.owner, "/", CR.name), React.createElement("div", {
+    className: "repo-branch"
+  }, "Branch: ", CR.branch)), React.createElement("div", {
+    className: "repo-item"
+  }, React.createElement("div", {
+    className: "repo-lbl"
+  }, "Quartz Repository"), React.createElement("div", {
+    className: "repo-val"
+  }, QR.owner, "/", QR.name), React.createElement("div", {
+    className: "repo-branch"
+  }, "Branch: ", QR.branch)))));
+}
+function SecurityPage() {
+  const [notes, setNotes] = useState([]);
+  const [pwd, setPwd] = useState('');
+  const [pwdSha, setPwdSha] = useState('');
+  const [loadingPwd, setLoadingPwd] = useState(true);
+  const [loadingNotes, setLoadingNotes] = useState(true);
+  const [savingPwd, setSavingPwd] = useState(false);
+  const [vaultPath, setVaultPath] = useState('locked');
+  useEffect(() => {
+    loadPwd();
+    loadNotesList();
+  }, []);
+  const loadPwd = async () => {
+    setLoadingPwd(true);
+    try {
+      const res = await gGet(QR, 'archive-config.json').catch(() => null);
+      if (res && res.content) {
+        const config = JSON.parse(dec(res.content));
+        setPwd(config.password || '');
+        setPwdSha(res.sha);
       }
-
-      const treeRoot = buildTree(notes, vaultPath);
-
-      return (
-        <div className="content">
-          {/* Vault Status Banner */}
-          <div className="settings-card" style={{ borderLeft: '4px solid var(--primary)', background: 'var(--bg2)', padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-              <div style={{ fontSize: '2rem', lineHeight: '1' }}>🔒</div>
-              <div>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>Folder-Level Vault Active</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text2)', marginTop: '0.2rem' }}>
-                  All markdown assets recursively under <code>{vaultPath}/</code> will be automatically encrypted and compiled into secure containers.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Master Encryption Password Form */}
-          <div className="settings-card" style={{ marginBottom: '1.5rem' }}>
-            <div className="settings-hdr">
-              <div>
-                <div className="settings-title">🔑 Master Encryption Password</div>
-                <div className="settings-sub font-sm">Updates <code>archive-config.json</code> in the Quartz repository</div>
-              </div>
-              <button className="btn btn-primary btn-sm" onClick={savePwd} disabled={savingPwd || loadingPwd}>
-                {savingPwd ? <span className="spin"></span> : 'Save Password'}
-              </button>
-            </div>
-            <div className="form-group" style={{ maxWidth: '400px', display: 'flex', gap: '0.75rem', alignItems: 'center', marginTop: '1rem' }}>
-              <input
-                className="input"
-                type="password"
-                placeholder="Enter single master password"
-                value={pwd}
-                onChange={e => setPwd(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Vault File Tree Viewport */}
-          <div className="settings-card">
-            <div className="settings-title" style={{ marginBottom: '0.35rem' }}>📂 Vault File Tree Viewport</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text2)', marginBottom: '1.25rem' }}>
-              Showing all files currently found inside <code>{vaultPath}/</code> in the content repository. These files will be secured during the next compilation run.
-            </div>
-            {loadingNotes ? (
-              <div style={{ textAlign: 'center', padding: '2rem' }}><span className="spin"></span> Loading vault files...</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', padding: '1.25rem', borderRadius: '8px', background: 'var(--bg3)', border: '1px solid var(--border)' }}>
-                {notes.length === 0 ? (
-                  <div style={{ color: 'var(--text2)', textAlign: 'center', padding: '1.5rem' }}>No note files found in vault folder.</div>
-                ) : (
-                  renderTree(treeRoot)
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingPwd(false);
     }
-    /* ============ AUTH ============ */
-
-
-    /* ============ APP ROOT ============ */
-    function App() {
-      const [authed, setAuthed] = useState(false);
-      const [page, setPage] = useState('folders');
-      const [dark, setDark] = useState(false); // Default to false, will be set by useEffect
-
-      useEffect(() => {
-        const savedDark = localStorage.getItem('quartz_admin_dark');
-        if (savedDark !== null) setDark(savedDark === 'true');
-        else setDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
-      }, []);
-      useEffect(() => {
-        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-        localStorage.setItem('quartz_admin_dark', dark);
-      }, [dark]);
-
-      useEffect(() => {
-        const saved = localStorage.getItem('github_token');
-        if (saved) { setTok(saved); setAuthed(true); }
-      }, []);
-
-      const handleAuth = (t) => { setTok(t); setAuthed(true); };
-      const handleLogout = () => { localStorage.removeItem('github_token'); setTok(''); setAuthed(false); };
-
-      if (!authed) return <><AuthPage onAuth={handleAuth} /><Toasts /></>;
-      const VIEWS = { folders: FolderPage, security: SecurityPage, settings: SettingsPage };
-      const View = VIEWS[page];
-      return (
-        <div className="app">
-          <Sidebar page={page} setPage={setPage} />
-          <div className="main">
-            <Header page={page} dark={dark} setDark={setDark} onLogout={handleLogout} />
-            <View />
-          </div>
-          <Toasts />
-        </div>
-      );
+  };
+  const savePwd = async () => {
+    if (!pwd.trim()) {
+      toast.err('Password cannot be empty');
+      return;
     }
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    setSavingPwd(true);
+    try {
+      const payload = JSON.stringify({
+        password: pwd
+      }, null, 2);
+      let res;
+      if (pwdSha) {
+        res = await gPut(QR, 'archive-config.json', payload, pwdSha, '🔒 Update master password via Admin Dashboard');
+      } else {
+        res = await gCreate(QR, 'archive-config.json', payload, '🔒 Initialize master password via Admin Dashboard');
+      }
+      if (res && res.content) {
+        setPwdSha(res.content.sha);
+      }
+      toast.ok('Master password updated. The next Quartz deployment will use this archive-config.json value.');
+    } catch (e) {
+      toast.err('Failed to save password: ' + e.message);
+    } finally {
+      setSavingPwd(false);
+    }
+  };
+  const loadNotesList = async () => {
+    setLoadingNotes(true);
+    try {
+      const treeData = await gh(`/repos/${CR.owner}/${CR.name}/git/trees/${CR.branch}?recursive=1`);
+      const hasExtensiveResearch = treeData.tree.some(i => i.path.startsWith('Extensive Research/'));
+      const vPath = hasExtensiveResearch ? 'Extensive Research/locked' : 'locked';
+      setVaultPath(vPath);
+      const mdFiles = treeData.tree.filter(i => i.type === 'blob' && i.path.endsWith('.md') && i.path.startsWith(vPath + '/')).map(i => ({
+        name: i.path.split('/').pop().replace('.md', ''),
+        path: i.path,
+        sha: i.sha
+      }));
+      setNotes(mdFiles);
+    } catch (e) {
+      toast.err('Failed to load vault files: ' + e.message);
+    } finally {
+      setLoadingNotes(false);
+    }
+  };
+  const buildTree = (files, prefix) => {
+    const root = {
+      name: 'Vault',
+      type: 'dir',
+      children: {}
+    };
+    for (const file of files) {
+      const relPath = file.path.substring(prefix.length + 1);
+      if (!relPath) continue;
+      const parts = relPath.split('/');
+      let current = root;
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        const isLast = i === parts.length - 1;
+        if (isLast) {
+          current.children[part] = {
+            name: part.replace('.md', ''),
+            type: 'file',
+            path: file.path
+          };
+        } else {
+          if (!current.children[part]) {
+            current.children[part] = {
+              name: part,
+              type: 'dir',
+              children: {}
+            };
+          }
+          current = current.children[part];
+        }
+      }
+    }
+    return root;
+  };
+  const renderTree = (node, depth = 0) => {
+    const children = Object.values(node.children || {});
+    children.sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === 'dir' ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+    return children.map(child => {
+      if (child.type === 'file') {
+        return React.createElement("div", {
+          key: child.path,
+          className: "tree-file-node",
+          style: {
+            paddingLeft: `${(depth + 1) * 1.25}rem`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            margin: '0.375rem 0'
+          }
+        }, React.createElement("span", {
+          style: {
+            fontSize: '1rem',
+            width: '20px',
+            textAlign: 'center'
+          }
+        }, "\uD83D\uDCC4"), React.createElement("div", {
+          style: {
+            flex: 1
+          }
+        }, React.createElement("div", {
+          style: {
+            fontSize: '0.85rem',
+            fontWeight: '500',
+            color: 'var(--text)'
+          }
+        }, child.name), React.createElement("div", {
+          style: {
+            fontSize: '0.7rem',
+            color: 'var(--text2)'
+          }
+        }, child.path)), React.createElement("span", {
+          className: "badge-sm",
+          style: {
+            background: 'var(--primary)',
+            color: '#fff',
+            fontSize: '0.68rem',
+            padding: '0.15rem 0.4rem',
+            borderRadius: '4px',
+            whiteSpace: 'nowrap'
+          }
+        }, "Secured"));
+      } else {
+        return React.createElement("div", {
+          key: child.name,
+          className: "tree-dir-node",
+          style: {
+            margin: '0.5rem 0'
+          }
+        }, React.createElement("div", {
+          className: "tree-dir-header",
+          style: {
+            paddingLeft: `${depth * 1.25}rem`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            fontWeight: '600',
+            fontSize: '0.9rem',
+            color: 'var(--secondary)'
+          }
+        }, React.createElement("span", {
+          style: {
+            fontSize: '1.05rem',
+            width: '20px',
+            textAlign: 'center'
+          }
+        }, "\uD83D\uDCC1"), React.createElement("span", null, child.name.toUpperCase())), React.createElement("div", {
+          className: "tree-dir-body"
+        }, renderTree(child, depth + 1)));
+      }
+    });
+  };
+  if (loadingPwd && loadingNotes) {
+    return React.createElement("div", {
+      className: "content"
+    }, React.createElement("div", {
+      className: "skel skel-card",
+      style: {
+        height: '140px'
+      }
+    }), React.createElement("div", {
+      className: "skel skel-card",
+      style: {
+        height: '300px'
+      }
+    }));
+  }
+  const treeRoot = buildTree(notes, vaultPath);
+  return React.createElement("div", {
+    className: "content"
+  }, React.createElement("div", {
+    className: "settings-card",
+    style: {
+      borderLeft: '4px solid var(--primary)',
+      background: 'var(--bg2)',
+      padding: '1.25rem 1.5rem',
+      marginBottom: '1.5rem'
+    }
+  }, React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1.25rem'
+    }
+  }, React.createElement("div", {
+    style: {
+      fontSize: '2rem',
+      lineHeight: '1'
+    }
+  }, "\uD83D\uDD12"), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontSize: '1rem',
+      fontWeight: '600',
+      color: 'var(--text)'
+    }
+  }, "Folder-Level Vault Active"), React.createElement("div", {
+    style: {
+      fontSize: '0.8rem',
+      color: 'var(--text2)',
+      marginTop: '0.2rem'
+    }
+  }, "All markdown assets recursively under ", React.createElement("code", null, vaultPath, "/"), " will be automatically encrypted and compiled into secure containers.")))), React.createElement("div", {
+    className: "settings-card",
+    style: {
+      marginBottom: '1.5rem'
+    }
+  }, React.createElement("div", {
+    className: "settings-hdr"
+  }, React.createElement("div", null, React.createElement("div", {
+    className: "settings-title"
+  }, "\uD83D\uDD11 Master Encryption Password"), React.createElement("div", {
+    className: "settings-sub font-sm"
+  }, "Updates ", React.createElement("code", null, "archive-config.json"), " in the Quartz repository")), React.createElement("button", {
+    className: "btn btn-primary btn-sm",
+    onClick: savePwd,
+    disabled: savingPwd || loadingPwd
+  }, savingPwd ? React.createElement("span", {
+    className: "spin"
+  }) : 'Save Password')), React.createElement("div", {
+    className: "form-group",
+    style: {
+      maxWidth: '400px',
+      display: 'flex',
+      gap: '0.75rem',
+      alignItems: 'center',
+      marginTop: '1rem'
+    }
+  }, React.createElement("input", {
+    className: "input",
+    type: "password",
+    placeholder: "Enter single master password",
+    value: pwd,
+    onChange: e => setPwd(e.target.value)
+  }))), React.createElement("div", {
+    className: "settings-card"
+  }, React.createElement("div", {
+    className: "settings-title",
+    style: {
+      marginBottom: '0.35rem'
+    }
+  }, "\uD83D\uDCC2 Vault File Tree Viewport"), React.createElement("div", {
+    style: {
+      fontSize: '0.78rem',
+      color: 'var(--text2)',
+      marginBottom: '1.25rem'
+    }
+  }, "Showing all files currently found inside ", React.createElement("code", null, vaultPath, "/"), " in the content repository. These files will be secured during the next compilation run."), loadingNotes ? React.createElement("div", {
+    style: {
+      textAlign: 'center',
+      padding: '2rem'
+    }
+  }, React.createElement("span", {
+    className: "spin"
+  }), " Loading vault files...") : React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.25rem',
+      padding: '1.25rem',
+      borderRadius: '8px',
+      background: 'var(--bg3)',
+      border: '1px solid var(--border)'
+    }
+  }, notes.length === 0 ? React.createElement("div", {
+    style: {
+      color: 'var(--text2)',
+      textAlign: 'center',
+      padding: '1.5rem'
+    }
+  }, "No note files found in vault folder.") : renderTree(treeRoot))));
+}
+function App() {
+  const [authed, setAuthed] = useState(false);
+  const [page, setPage] = useState('folders');
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const savedDark = localStorage.getItem('quartz_admin_dark');
+    if (savedDark !== null) setDark(savedDark === 'true');else setDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    localStorage.setItem('quartz_admin_dark', dark);
+  }, [dark]);
+  useEffect(() => {
+    const saved = localStorage.getItem('github_token');
+    if (saved) {
+      setTok(saved);
+      setAuthed(true);
+    }
+  }, []);
+  const handleAuth = t => {
+    setTok(t);
+    setAuthed(true);
+  };
+  const handleLogout = () => {
+    localStorage.removeItem('github_token');
+    setTok('');
+    setAuthed(false);
+  };
+  if (!authed) return React.createElement(React.Fragment, null, React.createElement(AuthPage, {
+    onAuth: handleAuth
+  }), React.createElement(Toasts, null));
+  const VIEWS = {
+    folders: FolderPage,
+    security: SecurityPage,
+    settings: SettingsPage
+  };
+  const View = VIEWS[page];
+  return React.createElement("div", {
+    className: "app"
+  }, React.createElement(Sidebar, {
+    page: page,
+    setPage: setPage
+  }), React.createElement("div", {
+    className: "main"
+  }, React.createElement(Header, {
+    page: page,
+    dark: dark,
+    setDark: setDark,
+    onLogout: handleLogout
+  }), React.createElement(View, null)), React.createElement(Toasts, null));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, null));
   </script>
 </body>
 
